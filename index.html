@@ -225,6 +225,22 @@ main { padding-block: 32px 64px; }
 
 .toast { position: fixed; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 8px; font-weight: 600; transform: translateY(20px); opacity: 0; transition: .25s; pointer-events: none; z-index: 20; }
 .toast.show { transform: none; opacity: 1; }
+.goals { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 20px; }
+.goals h3 { font-size: 16px; margin-bottom: 6px; }
+.goals ul { margin: 0; padding-left: 20px; }
+.goals li { margin: 4px 0; }
+.goals p { margin: 10px 0 0; font-size: 14px; color: var(--muted); }
+.goals.recap { border-color: var(--ok); background: var(--ok-soft); }
+.deep { margin-top: 18px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+.deep .eyebrow { margin-bottom: 4px; color: var(--accent); }
+.deep h4 { font-family: var(--f-display); font-size: 15px; margin: 14px 0 0; }
+.deep > :last-child { margin-bottom: 0; }
+.mistake { border-left: 3px solid var(--bad); padding: 6px 12px; font-size: 14px; }
+.gloss-search { width: 100%; max-width: 420px; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); margin-bottom: 18px; }
+.gloss { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+.gloss-item { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; }
+.gloss-item b { font-family: var(--f-display); font-size: 16px; display: block; }
+.gloss-item span { font-size: 14px; color: var(--muted); }
 .reset { margin-top: 28px; font-size: 13px; color: var(--muted); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 footer { border-top: 1px solid var(--line); padding-block: 20px; font-size: 13px; color: var(--muted); }
 
@@ -247,6 +263,7 @@ footer { border-top: 1px solid var(--line); padding-block: 20px; font-size: 13px
     <nav class="main" aria-label="Main">
       <a href="#home" data-nav="home">Home</a>
       <a href="#paths" data-nav="paths">Learning paths</a>
+      <a href="#glossary" data-nav="glossary">Glossary</a>
       <a href="#leaderboard" data-nav="leaderboard">Leaderboard</a>
     </nav>
     <div class="stats">
@@ -278,6 +295,426 @@ const PATHS = [
   { id: 'next', name: 'What Comes Next', blurb: 'Where these skills lead: careers, certifications, and legal places to keep practising.', rooms: ['careers'] }
 ];
 const ORDER = PATHS.flatMap(p => p.rooms);
+
+/* Learning goals and key takeaways for each room */
+const META = {
+  'how-computers-work': {
+    learn: ['Name the main parts of a computer and what each does', 'Explain what an operating system and its kernel are', 'Understand programs, processes and why user accounts matter for security'],
+    recap: ['The CPU runs instructions, RAM holds work in progress, storage keeps files permanently.', 'The operating system manages hardware and decides what each program may do.', 'Every process runs as a user. Attackers try to move from a normal user to root or Administrator.']
+  },
+  'binary-hex': {
+    learn: ['Read and write small binary numbers', 'Convert between binary, decimal and hexadecimal', 'Recognise where hex appears in security work'],
+    recap: ['8 bits make a byte, and one byte holds values 0 to 255.', 'Each binary place is worth double the one to its right: 1, 2, 4, 8, 16...', 'One hex digit is exactly 4 bits, so one byte is two hex digits (00 to FF).']
+  },
+  'hello-ethics': {
+    learn: ['Explain the difference between ethical and criminal hacking', 'Use the CIA triad to describe any security problem', 'List the five phases of a penetration test'],
+    recap: ['Permission, in writing, is what makes hacking ethical and legal.', 'Confidentiality, Integrity and Availability are the three things security protects.', 'A pentest goes recon → scanning → access → escalation → report. The report is the product.']
+  },
+  'stay-safe-online': {
+    learn: ['Choose passwords that resist real attacks', 'Explain the three kinds of authentication factor', 'Spot the warning signs of a phishing email'],
+    recap: ['Long, unique passwords stored in a password manager beat short, clever ones.', '2FA means a stolen password alone is not enough. Protect your email first.', 'Phishing relies on urgency, lookalike domains and links that go somewhere unexpected.']
+  },
+  'first-shell': {
+    learn: ['Find out who and where you are on a Linux system', 'Move between folders and read files', 'Find hidden files and read the list of users'],
+    recap: ['whoami, pwd, ls, cd and cat are the five commands you will use most.', 'Files starting with a dot are hidden. ls -a shows them.', '/etc/passwd lists every account on the machine.']
+  },
+  'linux-permissions': {
+    learn: ['Read a permission string like -rwxr-x---', 'Understand why "Permission denied" happens', 'Change permissions with chmod, including number form'],
+    recap: ['Each file has read, write and execute rights for its owner, its group and everyone else.', 'Files readable by everyone that contain secrets are a common real-world weakness.', 'chmod +x makes a file runnable. 755 and 644 are the most common number forms.']
+  },
+  'windows-basics': {
+    learn: ['Tell standard, administrator and SYSTEM accounts apart', 'Use basic Command Prompt and PowerShell commands', 'Find security events in Event Viewer'],
+    recap: ['UAC asks for permission before a program gets admin rights.', 'dir, type, ipconfig and tasklist are the Windows versions of common Linux commands.', 'Event IDs 4624, 4625 and 1102 tell you about logins and log tampering.']
+  },
+  'networking-101': {
+    learn: ['Read IP addresses and tell private from public', 'Match common ports to their services', 'Explain TCP, UDP and DNS in plain words'],
+    recap: ['An IP address finds the machine; a port finds the service on it.', 'TCP is reliable and uses a handshake; UDP is fast and fire-and-forget.', 'DNS turns names into IP addresses using records like A and MX.']
+  },
+  'web-101': {
+    learn: ['Describe what happens in an HTTP request and response', 'Read status codes like a hacker', 'Explain how cookies keep you logged in'],
+    recap: ['GET fetches, POST sends data.', '2xx success, 3xx redirect, 4xx your mistake, 5xx the server broke.', 'A session cookie is as valuable as a password, which is why HttpOnly matters.']
+  },
+  'encoding-vs-encryption': {
+    learn: ['Tell encoding, encryption and hashing apart', 'Decode Base64 on the command line', 'Understand why classic ciphers like Caesar are broken'],
+    recap: ['Encoding changes format and anyone can reverse it. It is never protection.', 'Encryption needs a key; hashing cannot be reversed at all.', 'Ciphers with only a few possible keys can be broken by trying every key.']
+  },
+  'hashing-basics': {
+    learn: ['Explain what makes a hash function useful', 'Verify a download with SHA-256', 'Know which hash functions are outdated'],
+    recap: ['Same input → same hash. Tiny change → completely different hash.', 'Compare the hash you compute with the one the developer published.', 'Use SHA-256 for security. MD5 and SHA-1 are broken.']
+  },
+  'python-basics': {
+    learn: ['Run Python code and print results', 'Store values in variables of different types', 'Make decisions with if, elif and else'],
+    recap: ['print() shows values; len() counts characters.', 'str, int, float and bool are the four basic types.', 'Indentation defines blocks, and == compares while = assigns.']
+  },
+  'python-strings-lists': {
+    learn: ['Slice and transform strings', 'Store many values in a list and loop over them', 'Convert between characters and numbers'],
+    recap: ['text[start:end:step] slices; text[::-1] reverses.', 'for item in list: repeats work for every item.', 'ord() turns a character into a number; chr() turns it back.']
+  },
+  'python-functions-data': {
+    learn: ['Write and call your own functions', 'Look up values with dictionaries', 'Combine everything into a small log parser'],
+    recap: ['def name(params): defines a function; return sends a result back.', 'dict.get(key, default) looks up safely.', 'split(), loops and a dictionary of counts can summarise any log.']
+  },
+  'python-security': {
+    learn: ['Hash data with hashlib', 'Decode Base64 with the base64 module', 'Write small defensive checks for domains and passwords'],
+    recap: ['Hash functions work on bytes, so call .encode() on text first.', 'Python\'s standard library already covers hashing and encoding.', 'Small scripts can catch real threats like lookalike phishing domains.']
+  },
+  'nmap-recon': {
+    learn: ['Check whether a target is up', 'Scan for open ports and service versions with Nmap', 'Gather clues from a website, including robots.txt'],
+    recap: ['ping checks a host is alive; TTL hints at its operating system.', 'nmap finds open ports; -sV finds the software versions behind them.', 'robots.txt and HTML comments often leak paths that were meant to be private.']
+  },
+  'dir-discovery': {
+    learn: ['Explain why unlinked pages are still reachable', 'Run a directory scan and read its results', 'Recognise the danger of backup files on web servers'],
+    recap: ['A directory scanner tries a wordlist of common names against a site.', 'Status codes tell you what exists: 200 found, 301 redirect, 403 forbidden.', 'Backups and .bak files on a web server often leak passwords.']
+  },
+  'login-bypass': {
+    learn: ['See how user input can become part of a SQL query', 'Understand how a quote and a comment change a query\'s meaning', 'Know the correct fix: parameterized queries'],
+    recap: ['Building queries by joining strings lets input turn into code.', 'Quotes end the string early; -- comments out the rest of the query.', 'Parameterized queries keep data and code separate and stop injection.']
+  },
+  'xss-basics': {
+    learn: ['Explain what cross-site scripting is', 'Test whether a page encodes its output', 'Fix XSS with output encoding'],
+    recap: ['XSS happens when user input is placed in a page as HTML.', 'alert(1) is the harmless standard test that proves code ran.', 'Encoding < and > as &amp;lt; and &amp;gt; makes input display as text.']
+  },
+  'idor': {
+    learn: ['Tell authentication and authorization apart', 'Find an IDOR by changing an ID', 'Describe the server-side fix'],
+    recap: ['Logging in proves who you are, not what you may see.', 'If changing an ID shows someone else\'s data, authorization is broken.', 'The server must check ownership on every request.']
+  },
+  'defense-in-depth': {
+    learn: ['Describe the layers of a defense-in-depth strategy', 'Apply the principle of least privilege', 'Plan backups with the 3-2-1 rule'],
+    recap: ['Stack many controls so one failure is not a disaster.', 'Give every account only the access it needs.', '3 copies, 2 kinds of storage, 1 offsite. And test restoring.']
+  },
+  'log-hunt': {
+    learn: ['Read Linux authentication logs', 'Filter and count log lines with grep and pipes', 'Reconstruct what an attacker did'],
+    recap: ['/var/log/auth.log records every SSH login attempt.', 'grep, wc -l and pipes turn thousands of lines into answers.', 'Many failures followed by a success from the same IP means a guessed password.']
+  },
+  'phishing-investigation': {
+    learn: ['Read raw email headers', 'Interpret SPF, DKIM and DMARC results', 'Collect evidence and decide next steps'],
+    recap: ['Received headers show the real sending server.', 'SPF, DKIM and DMARC failures are strong signs of spoofing.', 'Block, search for other victims, and reset passwords for anyone who clicked.']
+  },
+  'careers': {
+    learn: ['Know the main job roles in cyber security', 'Choose a sensible certification path', 'Find legal ways to keep practising'],
+    recap: ['SOC analyst is a common first job; pentesting and engineering follow.', 'Security+ → eJPT → OSCP is a popular progression.', 'CTFs, practice platforms and bug bounty programmes are legal. Everything else needs permission.']
+  }
+};
+
+/* Extra in-depth explanations, by room and task number */
+const DETAIL = {
+  'how-computers-work': [
+    `<h4>Follow one click</h4>
+<p>When you double-click a game icon, all four parts work together:</p>
+<ul><li><strong>Storage</strong> holds the game's files. They have been sitting there since you installed it.</li><li>The OS copies the files into <strong>RAM</strong>, because RAM is around 100 times faster than an SSD.</li><li>The <strong>CPU</strong> reads instructions from RAM and runs them, billions per second.</li><li>The <strong>network card</strong> sends your moves to the game server and receives other players' moves.</li></ul>
+<h4>Why hackers care</h4>
+<p>Each part is a place where data lives, and every place data lives can leak:</p>
+<ul><li><strong>RAM</strong>: tools can read passwords from the memory of a running program, which is why password managers try to clear secrets from memory quickly.</li><li><strong>Storage</strong>: a stolen laptop without disk encryption (BitLocker on Windows, FileVault on Mac) gives away every file, even without the password. The thief just removes the drive.</li><li><strong>Network</strong>: anything sent without encryption can be read by someone on the same Wi-Fi.</li></ul>
+<p class="mistake"><strong>Common mistake:</strong> thinking that deleting a file erases it. Usually the OS only marks the space as free. The data stays on the disk until it is overwritten, and recovery tools can bring it back.</p>`,
+    `<h4>What the OS actually does</h4>
+<p>Without an operating system, every program would need its own code to talk to the keyboard, screen, disk and network. The OS does this once for everyone, and it acts as the referee:</p>
+<ul><li><strong>Memory</strong>: gives each program its own private area so one cannot read another's.</li><li><strong>Files</strong>: checks permissions before any program opens a file.</li><li><strong>Scheduling</strong>: shares the CPU between hundreds of programs so they all seem to run at once.</li></ul>
+<h4>User mode and kernel mode</h4>
+<p>Normal programs run in <strong>user mode</strong> with limited rights. The kernel runs in <strong>kernel mode</strong> with full control of the hardware. When a program wants something only the kernel can do, like reading a file, it asks the kernel with a <strong>system call</strong>.</p>
+<p>A bug in the kernel is therefore extremely serious: an attacker who exploits it gets full control. That is why OS security updates matter so much.</p>
+<h4>Why Linux for hacking?</h4>
+<p>Linux is free, its code is public, and almost everything is controlled by text commands. That makes it easy to automate and to understand. Kali Linux is a version of Linux that comes with hundreds of security tools pre-installed.</p>`,
+    `<h4>See it on your own PC</h4>
+<p>Open Task Manager on Windows (<kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Esc</kbd>) and click the <strong>Details</strong> tab. Each row is a process. The <strong>User name</strong> column shows which account each one runs as. You will see your own name, <code>SYSTEM</code>, and service accounts.</p>
+<p>One program can run as several processes. A web browser often starts one process per tab, so a crashed or hacked tab cannot easily affect the others. This idea is called <strong>sandboxing</strong>.</p>
+<h4>Privilege escalation, step by step</h4>
+<p>Real attacks rarely start as admin. A typical chain looks like this:</p>
+<ul><li>The attacker tricks a user into running something, or exploits a bug in a website. Now they run code as that user or as the web server account.</li><li>They look around for mistakes: a file with a saved password, a program that runs as root but can be edited by anyone, an outdated kernel.</li><li>They use that mistake to become root or Administrator. Now they control the whole machine.</li></ul>
+<p>Defenders stop this with the <strong>principle of least privilege</strong>: give every account and program only the rights it really needs. You will meet it again in the Defensive path.</p>`
+  ],
+  'binary-hex': [
+    `<h4>Why only 1 and 0?</h4>
+<p>Inside a chip, a tiny switch called a transistor is either letting electricity through or not. Two states are very easy to tell apart reliably, even with electrical noise. Ten different voltage levels would be far harder to read correctly. So computers count in base 2.</p>
+<h4>Sizes you will meet</h4>
+<div class="tbl-wrap"><table><tr><th>Unit</th><th>Size</th><th>Roughly holds</th></tr>
+<tr><td>Bit</td><td>1 or 0</td><td>Yes/no</td></tr><tr><td>Byte</td><td>8 bits</td><td>One letter</td></tr>
+<tr><td>Kilobyte (KB)</td><td>1,000 bytes</td><td>A short text file</td></tr><tr><td>Megabyte (MB)</td><td>1,000 KB</td><td>A photo or a song</td></tr>
+<tr><td>Gigabyte (GB)</td><td>1,000 MB</td><td>An HD film</td></tr></table></div>
+<p>Watch out: internet speeds are measured in <strong>bits</strong> per second (Mbps), file sizes in <strong>bytes</strong>. A 100 Mbps connection downloads about 12.5 MB per second, because you divide by 8.</p>`,
+    `<h4>Worked example: decimal to binary</h4>
+<p>Convert 45 to binary. Go through the place values from biggest to smallest. Write 1 if the value fits into what is left, otherwise 0:</p>
+<pre>128? no  → 0      45 left
+ 64? no  → 0      45 left
+ 32? yes → 1      45 - 32 = 13 left
+ 16? no  → 0      13 left
+  8? yes → 1      13 - 8 = 5 left
+  4? yes → 1       5 - 4 = 1 left
+  2? no  → 0       1 left
+  1? yes → 1       1 - 1 = 0 left
+
+45 = 00101101</pre>
+<p>Check it the other way: 32 + 8 + 4 + 1 = 45. ✓</p>
+<h4>Why this shows up in hacking</h4>
+<p>Subnet masks like <code>255.255.255.0</code> only make sense in binary: it is 24 ones followed by 8 zeros, written <code>/24</code>. It means the first 24 bits are the network and the last 8 bits identify the device, so the network has up to 256 addresses.</p>
+<p class="mistake"><strong>Common mistake:</strong> starting place values at 1 on the left. The smallest place (1) is always on the <strong>right</strong>.</p>`,
+    `<h4>Worked example: hex to decimal</h4>
+<p>In hex each place is worth 16× the one to its right. Convert <code>0x2F</code>:</p>
+<pre>2 × 16 = 32
+F × 1  = 15
+         ──
+         47</pre>
+<h4>The shortcut: hex ↔ binary</h4>
+<p>Because one hex digit is exactly 4 bits, you can convert digit by digit without any maths on the whole number:</p>
+<pre>hex:     2     F
+binary: 0010  1111   →  00101111</pre>
+<h4>Where you will see hex</h4>
+<ul><li><strong>Hashes</strong>: <code>5f4dcc3b...</code> is just bytes written in hex.</li><li><strong>MAC addresses</strong>: the hardware ID of a network card, like <code>3C:52:82:1A:9F:07</code>. Six bytes, each as two hex digits.</li><li><strong>Colours</strong>: <code>#2E47F0</code> means red 0x2E, green 0x47, blue 0xF0.</li><li><strong>Memory addresses</strong> in debuggers and crash messages, like <code>0x7ffe3a10</code>.</li><li><strong>URL encoding</strong>: a space in a web address becomes <code>%20</code>, because 0x20 = 32 is the code for a space.</li></ul>`
+  ],
+  'hello-ethics': [
+    `<h4>What permission looks like in practice</h4>
+<p>Before a professional test starts, both sides sign documents:</p>
+<ul><li><strong>Scope</strong>: the exact IP addresses, websites and apps that may be tested, and anything excluded (for example "do not touch the payment system").</li><li><strong>Rules of engagement</strong>: when testing may happen, which techniques are allowed (is phishing staff OK? is crashing a server OK?), and who to call in an emergency.</li><li><strong>Authorization letter</strong>: signed by someone who actually owns the systems. A tester carries it in case anyone asks.</li></ul>
+<h4>Situations that are NOT allowed</h4>
+<ul><li>"Just checking" your school or office Wi-Fi without the IT team's written OK.</li><li>Testing a website because it "looked insecure".</li><li>Logging into a friend's account with a password you guessed, even as a joke.</li></ul>
+<p>Each of these can be a crime under computer misuse laws in most countries, whatever your intentions. The safe rule: <strong>if you do not own it and you do not have written permission, do not touch it.</strong></p>`,
+    `<h4>Use the triad to analyse any incident</h4>
+<p>Ask three questions about any attack: could someone <em>read</em> what they should not? <em>Change</em> what they should not? <em>Stop</em> people using it?</p>
+<div class="tbl-wrap"><table><tr><th>Incident</th><th>C</th><th>I</th><th>A</th></tr>
+<tr><td>Ransomware encrypts a hospital's files</td><td></td><td>✓</td><td>✓</td></tr>
+<tr><td>Ransomware also uploads the files and threatens to publish them</td><td>✓</td><td>✓</td><td>✓</td></tr>
+<tr><td>A student changes their grade in the school system</td><td></td><td>✓</td><td></td></tr>
+<tr><td>Someone reads a celebrity's private photos</td><td>✓</td><td></td><td></td></tr></table></div>
+<h4>Controls that protect each one</h4>
+<ul><li><strong>Confidentiality</strong>: encryption, passwords, access permissions.</li><li><strong>Integrity</strong>: hashes, digital signatures, change logs, backups.</li><li><strong>Availability</strong>: backups, spare servers, DDoS protection.</li></ul>`,
+    `<h4>What each phase looks like</h4>
+<p>Imagine testing a small company, Northwind Tutoring, with permission:</p>
+<ul><li><strong>Recon</strong>: read their website, find staff names on LinkedIn, look up their domain's DNS records. Nothing is touched yet. This is called <em>passive</em> recon.</li><li><strong>Scanning</strong>: send packets to their in-scope servers with Nmap to see which ports are open. This is <em>active</em>: their systems can see you.</li><li><strong>Gaining access</strong>: you find their web server runs an old version with a known vulnerability, and use it to get a shell.</li><li><strong>Escalation</strong>: from the web server account you find a database password in a config file and become admin.</li><li><strong>Reporting</strong>: you write up every step, show evidence, rate each problem's severity and explain how to fix it.</li></ul>
+<h4>A good finding in a report</h4>
+<pre>Title:     Outdated web server allows remote code execution
+Severity:  Critical
+Where:     www.northwind.example (port 80)
+Evidence:  screenshot + exact steps to reproduce
+Fix:       update the web server to the current version</pre>`
+  ],
+  'stay-safe-online': [
+    `<h4>How attackers really get passwords</h4>
+<ul><li><strong>Data breaches</strong>: a site gets hacked and its password database leaks. Billions of leaked passwords are traded online.</li><li><strong>Guessing</strong>: trying the most common passwords (123456, password, qwerty) against many accounts.</li><li><strong>Phishing</strong>: a fake login page you type the password into yourself.</li><li><strong>Malware</strong>: a keylogger that records what you type.</li></ul>
+<h4>Why length wins</h4>
+<p>Every extra character multiplies the number of possibilities. With the 26 lowercase letters alone, 8 characters give about 200 billion combinations, but 16 characters give about 44,000 billion billion. A computer that can try billions per second finishes the first quickly and never finishes the second.</p>
+<p>A <strong>passphrase</strong> of four or more random words is long and still easy to remember: <code>violin-ocean-pepper-lantern</code>.</p>
+<h4>Check your own accounts</h4>
+<p>The free site <em>haveibeenpwned.com</em> tells you whether your email address appears in known breaches. If it does, change the password on that site and anywhere you reused it.</p>`,
+    `<h4>Not all 2FA is equally strong</h4>
+<div class="tbl-wrap"><table><tr><th>Method</th><th>Strength</th><th>Weakness</th></tr>
+<tr><td>SMS code</td><td>Better than nothing</td><td>SIM swapping: an attacker convinces your mobile provider to move your number to their SIM</td></tr>
+<tr><td>Authenticator app</td><td>Good</td><td>A convincing fake site can still ask you for the code</td></tr>
+<tr><td>Push approval</td><td>Good</td><td>"MFA fatigue": attackers send many prompts hoping you tap Approve</td></tr>
+<tr><td>Security key / passkey</td><td>Best</td><td>Checks the real website address, so phishing sites cannot use it</td></tr></table></div>
+<p class="mistake"><strong>Common mistake:</strong> approving a login prompt you did not start. If you get one, someone already has your password. Deny it and change the password.</p>
+<h4>Save your recovery codes</h4>
+<p>When you turn on 2FA, sites give you backup codes. Store them in your password manager or print them. Without them, losing your phone can lock you out for good.</p>`,
+    `<h4>A checklist for any suspicious message</h4>
+<ul><li><strong>Sender</strong>: does the address match the real company's domain exactly? Look for swapped letters, extra words (<code>-support</code>, <code>-secure</code>) or a different ending (<code>.co</code> instead of <code>.com</code>).</li><li><strong>Links</strong>: hover over (or long-press) a link to see where it really goes before clicking.</li><li><strong>Pressure</strong>: deadlines, threats, prizes and "your account will be closed" are designed to stop you thinking.</li><li><strong>Requests</strong>: real companies do not ask for your password, 2FA code or card number by email.</li><li><strong>Attachments</strong>: unexpected invoices, ZIP files and documents asking you to "enable content" are classic malware delivery.</li></ul>
+<h4>Other kinds of phishing</h4>
+<ul><li><strong>Spear phishing</strong>: written for one specific person, using details about them.</li><li><strong>Smishing</strong>: by SMS ("Your parcel could not be delivered...").</li><li><strong>Vishing</strong>: by phone call, often pretending to be the bank or IT support.</li></ul>
+<p>If you are unsure, contact the company using a phone number or website you already know, never the details in the message.</p>`
+  ],
+  'first-shell': [
+    `<h4>Anatomy of the prompt</h4>
+<pre>student@sc-lab:~$
+│       │      │ └─ $ = normal user (# means root)
+│       │      └─── current folder (~ = your home folder)
+│       └────────── machine name
+└────────────────── your username</pre>
+<p>The prompt alone tells you who you are, where you are, and whether you are root. Hackers read it every time they land on a new machine.</p>
+<h4>The Linux folder tree</h4>
+<p>Linux has one tree starting at <code>/</code> ("root" of the file system, not to be confused with the root user):</p>
+<ul><li><code>/home</code>: one folder per user.</li><li><code>/etc</code>: system settings and config files.</li><li><code>/var/log</code>: log files.</li><li><code>/tmp</code>: temporary files. Anyone can write here, so attackers like it.</li><li><code>/root</code>: the root user's home folder.</li></ul>`,
+    `<h4>Absolute and relative paths</h4>
+<p>An <strong>absolute</strong> path starts with <code>/</code> and works from anywhere: <code>/home/student/notes.txt</code>. A <strong>relative</strong> path starts from where you are now: if you are in <code>/home/student</code>, then <code>notes.txt</code> means the same file.</p>
+<ul><li><code>.</code> means "this folder".</li><li><code>..</code> means "the folder above".</li><li><code>~</code> means "my home folder".</li></ul>
+<h4>Time-savers</h4>
+<ul><li>Press <kbd>Tab</kbd> to auto-complete file names on a real Linux terminal.</li><li>Press <kbd>↑</kbd> to bring back your last command. This works in the lab too.</li><li><code>clear</code> (or <kbd>Ctrl</kbd> + <kbd>L</kbd>) wipes the screen.</li></ul>
+<p class="mistake"><strong>Common mistake:</strong> Linux is case-sensitive. <code>Notes.txt</code> and <code>notes.txt</code> are two different files.</p>`,
+    `<h4>Why hide files at all?</h4>
+<p>Dot files are not a security feature. They exist to keep settings out of the way: <code>.bashrc</code> holds your shell settings, <code>.ssh/</code> holds your SSH keys, and <code>.bash_history</code> records the commands you typed.</p>
+<h4>Gold for attackers</h4>
+<p>Because people forget they exist, hidden files often hold secrets. After landing on a machine, a tester checks:</p>
+<ul><li><code>.bash_history</code>: people sometimes type passwords straight into commands.</li><li><code>.ssh/</code>: a private key here may log in to other servers.</li><li>Config files like <code>.env</code> or <code>.git-credentials</code>, which often contain passwords and API keys.</li></ul>
+<p>Combine flags to see everything with details: <code>ls -la</code>. The <code>-l</code> part shows permissions, owner and size. You will use it in the next room.</p>`,
+    `<h4>Reading /etc/passwd</h4>
+<p>Each line has seven fields separated by colons:</p>
+<pre>priya:x:1001:1001:Priya,,,:/home/priya:/bin/bash
+│     │ │    │    │        │           └─ login shell
+│     │ │    │    │        └───────────── home folder
+│     │ │    │    └────────────────────── full name / comment
+│     │ │    └─────────────────────────── group ID
+│     │ └──────────────────────────────── user ID (0 = root)
+│     └────────────────────────────────── x = password stored elsewhere
+└──────────────────────────────────────── username</pre>
+<p>Despite the name, passwords are not in this file. The hashed passwords live in <code>/etc/shadow</code>, which only root can read.</p>
+<h4>Spotting real people</h4>
+<p>Accounts with a shell of <code>/usr/sbin/nologin</code> are service accounts that cannot log in. Accounts with <code>/bin/bash</code> and a folder in <code>/home</code> usually belong to real people, and those are what testers note down.</p>`
+  ],
+  'linux-permissions': [
+    `<h4>Owner, group, others</h4>
+<p>Every file has exactly one owner and one group. When you try to use a file, Linux checks in this order and stops at the first match:</p>
+<ul><li>Are you the <strong>owner</strong>? Use the first three letters.</li><li>Otherwise, are you in the file's <strong>group</strong>? Use the middle three.</li><li>Otherwise, you are <strong>others</strong>. Use the last three.</li></ul>
+<h4>What r, w and x mean for folders</h4>
+<p>On a folder the letters mean something slightly different:</p>
+<ul><li><code>r</code>: list the names of files inside.</li><li><code>w</code>: create, rename or delete files inside.</li><li><code>x</code>: enter the folder with <code>cd</code> and reach files in it.</li></ul>
+<p>Root ignores these rules entirely, which is why becoming root is the goal of so many attacks.</p>`,
+    `<h4>Real-world permission mistakes</h4>
+<ul><li><strong>World-readable secrets</strong>: a config file with a database password set to <code>644</code>, so every user on the server can read it. That is exactly what <code>app.conf</code> shows in the lab.</li><li><strong>World-writable scripts</strong>: a script that root runs every hour, but anyone can edit. An attacker adds one line and it runs as root.</li><li><strong>chmod 777 "to make it work"</strong>: gives everyone full rights. It fixes the error and creates a hole.</li></ul>
+<h4>How to look for them</h4>
+<p>On a real system, testers search for weak files with <code>find</code>. For example, this lists files anyone can write to:</p>
+<pre>find / -type f -perm -o+w 2>/dev/null</pre>
+<p>The <code>2>/dev/null</code> part hides the many "Permission denied" errors so only results are shown.</p>`,
+    `<h4>Number form, step by step</h4>
+<p>Each group of three letters becomes one digit: add r=4, w=2, x=1.</p>
+<pre>rwx = 4+2+1 = 7
+r-x = 4+0+1 = 5
+r-- = 4+0+0 = 4
+--- = 0
+
+rwxr-xr-- = 7 5 4  →  chmod 754 file</pre>
+<h4>Common settings</h4>
+<div class="tbl-wrap"><table><tr><th>Number</th><th>Letters</th><th>Typical use</th></tr>
+<tr><td>755</td><td>rwxr-xr-x</td><td>Programs and folders everyone may use</td></tr>
+<tr><td>644</td><td>rw-r--r--</td><td>Normal files</td></tr>
+<tr><td>600</td><td>rw-------</td><td>Private files: SSH keys, configs with passwords</td></tr>
+<tr><td>700</td><td>rwx------</td><td>Private folders and scripts</td></tr></table></div>
+<p>Try <code>chmod 600 app.conf</code> in the lab, then <code>ls -l</code>, to lock the config file down properly.</p>`
+  ],
+  'windows-basics': [
+    `<h4>Why admins do not run as admin</h4>
+<p>If you browse the web with full admin rights and click a malicious file, the malware gets admin rights too. With UAC, programs start with standard rights, and you must approve each request for more. Malware that cannot get past that prompt stays limited.</p>
+<h4>Accounts on a work network</h4>
+<p>At home, accounts exist on one PC. At schools and companies, accounts usually live on a central server called a <strong>Domain Controller</strong> running <strong>Active Directory</strong>. One account then works on every PC. That makes Active Directory a top target: whoever controls it controls every computer in the organisation.</p>`,
+    `<h4>Try them on your own PC</h4>
+<p>Open PowerShell (search for it in the Start menu) and run:</p>
+<pre>whoami /groups      # which groups you belong to
+ipconfig /all       # full network settings
+tasklist            # running programs
+netstat -ano        # open network connections and listening ports
+systeminfo          # Windows version and installed updates</pre>
+<p>These are exactly the commands a tester runs first after getting access to a Windows machine. <code>systeminfo</code> shows missing updates, and <code>whoami /groups</code> shows whether you are already an admin.</p>
+<h4>PowerShell vs Command Prompt</h4>
+<p>Command Prompt passes plain text between commands. PowerShell passes <strong>objects</strong> with named properties, which makes it far more powerful for automation. For example, this lists the five processes using the most memory:</p>
+<pre>Get-Process | Sort-Object WorkingSet -Descending | Select-Object -First 5</pre>`,
+    `<h4>Opening Event Viewer</h4>
+<p>Press <kbd>Win</kbd> + <kbd>R</kbd>, type <code>eventvwr</code> and press Enter. Go to <em>Windows Logs → Security</em>. You may need to run it as administrator to see this log. Use <strong>Filter Current Log</strong> on the right to show one Event ID, such as 4625.</p>
+<h4>Reading an event</h4>
+<p>A failed logon event (4625) tells you the account name, the time, the logon type and the source network address. Logon type 3 means over the network; type 10 means Remote Desktop. Many 4625s with type 10 from an unknown IP mean someone is guessing Remote Desktop passwords from the internet.</p>
+<h4>At scale</h4>
+<p>One PC's log is easy to read by hand. A company with 5,000 PCs sends all their logs to a <strong>SIEM</strong> (Security Information and Event Management) system, which searches them together and raises alerts. Watching those alerts is the main job of a SOC analyst.</p>`
+  ],
+  'networking-101': [
+    `<h4>Find your own addresses</h4>
+<p>On Windows, run <code>ipconfig</code>. You will see your private IPv4 address (often <code>192.168.x.x</code>) and your <strong>default gateway</strong>, which is your router. To see your public IP, search "what is my IP" in a browser. The two are different because of <strong>NAT</strong> (Network Address Translation): your router swaps private addresses for its one public address on the way out.</p>
+<h4>The private ranges</h4>
+<pre>10.0.0.0    – 10.255.255.255
+172.16.0.0  – 172.31.255.255
+192.168.0.0 – 192.168.255.255</pre>
+<p><code>127.0.0.1</code> is special: it always means "this computer", also called <strong>localhost</strong>.</p>
+<h4>IPv6</h4>
+<p>IPv4 has about 4.3 billion addresses, which is not enough for every device on Earth. <strong>IPv6</strong> uses 128-bit addresses written in hex, like <code>2001:db8::8a2e:370:7334</code>, and has enough for practically everything.</p>`,
+    `<h4>How a port number is used</h4>
+<p>When you visit a website, your browser connects to the server's port 443. Your own computer picks a random high port (like 51122) for its side of the conversation. So a connection is really four things: your IP and port, and the server's IP and port.</p>
+<h4>Port ranges</h4>
+<ul><li><strong>0–1023</strong>: well-known ports for standard services. On Linux only root can listen on these.</li><li><strong>1024–49151</strong>: registered ports used by specific applications, like 3306 for MySQL or 3389 for Remote Desktop.</li><li><strong>49152–65535</strong>: temporary ports your computer uses for its own side of connections.</li></ul>
+<h4>Why open ports matter</h4>
+<p>Every open port is a program listening for strangers. Each one is a possible way in. Defenders close every port that is not needed. Attackers scan for the ones that are left.</p>`,
+    `<h4>The handshake as a phone call</h4>
+<pre>You:    "Hello, can you hear me?"        → SYN
+Server: "Yes, I hear you. Can you hear me?" → SYN-ACK
+You:    "Yes. Let's talk."                → ACK</pre>
+<p>Only after this does real data flow. Each side numbers its packets so missing ones can be detected and sent again.</p>
+<h4>How scanners use it</h4>
+<ul><li>Port <strong>open</strong>: the server answers SYN with SYN-ACK.</li><li>Port <strong>closed</strong>: the server answers with RST ("reset", meaning no one is listening).</li><li>Port <strong>filtered</strong>: no answer at all, usually because a firewall dropped the packet.</li></ul>
+<p>That is exactly how Nmap decides what to print for each port, which you will see in the Recon room.</p>
+<h4>The layers</h4>
+<p>Networking is often explained in layers. Simplified: <strong>Application</strong> (HTTP, DNS) sits on <strong>Transport</strong> (TCP, UDP), which sits on <strong>Internet</strong> (IP addresses), which sits on <strong>Link</strong> (Wi-Fi, Ethernet, MAC addresses). Each layer only cares about its own job.</p>`,
+    `<h4>What happens when you type a website name</h4>
+<ul><li>Your computer checks its own cache: have I looked this up recently?</li><li>If not, it asks a <strong>DNS resolver</strong>, usually run by your internet provider or a service like 1.1.1.1.</li><li>The resolver asks a <strong>root server</strong>, which points to the servers for <code>.com</code>.</li><li>Those point to the domain's own <strong>authoritative</strong> server, which gives the final answer.</li><li>The answer is cached for a while, set by its TTL (time to live).</li></ul>
+<h4>Try it</h4>
+<pre>nslookup example.com            # A record
+nslookup -type=mx gmail.com     # mail servers</pre>
+<h4>Why attackers love DNS</h4>
+<p>During recon, DNS reveals a company's subdomains (<code>vpn.</code>, <code>mail.</code>, <code>dev.</code>), and each one is a possible target. And if an attacker can change DNS answers, they can send victims to a fake site even when the victims type the right address.</p>`
+  ],
+  'web-101': [
+    `<h4>See real requests yourself</h4>
+<p>In Chrome or Edge, press <kbd>F12</kbd>, open the <strong>Network</strong> tab and reload a page. Every line is one request: the HTML, each image, each script. Click one to see its method, headers and response. This is the single most useful tool for learning web security.</p>
+<h4>Parts of a URL</h4>
+<pre>https://shop.example:443/products/view?id=42&amp;sort=price#reviews
+└─┬─┘   └────┬─────┘ └┬┘└─────┬──────┘└──────┬────────┘└──┬──┘
+scheme    host      port    path         query       fragment</pre>
+<p>The <strong>query</strong> (after <code>?</code>) carries parameters to the server. These are some of the first things a tester changes, as you will in the Broken Access Control room.</p>
+<h4>Headers</h4>
+<p>Requests and responses carry headers: <code>Host</code> (which site), <code>User-Agent</code> (which browser), <code>Cookie</code> (your session), and <code>Server</code> in responses, which sometimes reveals the exact server software and version.</p>`,
+    `<h4>Status codes worth memorising</h4>
+<div class="tbl-wrap"><table><tr><th>Code</th><th>Meaning</th><th>What a tester thinks</th></tr>
+<tr><td>200</td><td>OK</td><td>It exists and I can see it.</td></tr>
+<tr><td>301 / 302</td><td>Redirect</td><td>Where does it send me, and what if I don't follow?</td></tr>
+<tr><td>401</td><td>Unauthorized</td><td>I need to log in.</td></tr>
+<tr><td>403</td><td>Forbidden</td><td>It exists, but I'm blocked. Is the block applied everywhere?</td></tr>
+<tr><td>404</td><td>Not found</td><td>Nothing here.</td></tr>
+<tr><td>500</td><td>Server error</td><td>My input broke something. Why?</td></tr></table></div>
+<p class="mistake"><strong>Common mistake:</strong> treating 403 and 404 as the same. A 403 confirms something is there, which is useful information.</p>`,
+    `<h4>The cookie flags</h4>
+<ul><li><strong>HttpOnly</strong>: JavaScript cannot read the cookie, which blunts XSS.</li><li><strong>Secure</strong>: only sent over HTTPS, so it cannot be read on open Wi-Fi.</li><li><strong>SameSite</strong>: limits sending the cookie when another site triggers the request, which blocks some attacks that trick your browser into acting for you.</li></ul>
+<h4>See your cookies</h4>
+<p>In the developer tools (<kbd>F12</kbd>), open <strong>Application → Cookies</strong>. You will see each cookie's name, value and flags. Never share these values with anyone. To a website, whoever holds the session cookie <em>is</em> you.</p>
+<h4>Logging out matters</h4>
+<p>Clicking <strong>Log out</strong> tells the server to throw away the session, so a stolen cookie stops working. Just closing the tab often leaves the session alive, especially on shared computers.</p>`
+  ]
+};
+
+/* Glossary */
+const GLOSSARY = [
+  ['2FA / MFA', 'Two-factor or multi-factor authentication. Logging in needs something extra besides a password, such as a code from your phone.'],
+  ['Active Directory', 'Microsoft\'s system for managing users and computers across a whole organisation from central servers.'],
+  ['Attack surface', 'Every point where an attacker could try to get in: open ports, login pages, email, staff.'],
+  ['Authentication', 'Proving who you are, for example by logging in.'],
+  ['Authorization', 'Deciding what a logged-in user is allowed to do.'],
+  ['Base64', 'An encoding that turns any data into letters, digits, + and /. Anyone can decode it. It is not encryption.'],
+  ['Binary', 'Base-2 counting with only 0 and 1. How computers store everything.'],
+  ['Bit / Byte', 'A bit is one 0 or 1. A byte is 8 bits and holds values 0 to 255.'],
+  ['Bug bounty', 'A programme where a company pays people who report security bugs within a published scope.'],
+  ['CIA triad', 'Confidentiality, Integrity and Availability: the three things security protects.'],
+  ['Cookie', 'A small value a website stores in your browser. Session cookies keep you logged in.'],
+  ['CTF', 'Capture The Flag. A security competition or exercise where you find hidden flags by solving challenges.'],
+  ['CVE', 'Common Vulnerabilities and Exposures. A public ID number for a known security bug, like CVE-2021-44228.'],
+  ['DDoS', 'Distributed Denial of Service. Flooding a service with traffic from many machines so real users cannot reach it.'],
+  ['DNS', 'Domain Name System. Translates names like example.com into IP addresses.'],
+  ['Encoding', 'Changing data\'s format so it travels safely. Reversible by anyone.'],
+  ['Encryption', 'Scrambling data so only someone with the key can read it.'],
+  ['Exploit', 'Code or a technique that takes advantage of a vulnerability.'],
+  ['Firewall', 'A filter that allows or blocks network traffic based on rules.'],
+  ['Flag', 'In CTFs and on Shellcamp, a secret string like SC{...} that proves you solved a challenge.'],
+  ['Hash', 'A fixed-length fingerprint of data. One-way: it cannot be turned back into the original.'],
+  ['Hexadecimal', 'Base-16 counting using 0–9 and A–F. One hex digit is 4 bits.'],
+  ['HTTP / HTTPS', 'The protocol web browsers and servers use. HTTPS is the encrypted version.'],
+  ['IDOR', 'Insecure Direct Object Reference. Getting someone else\'s data by changing an ID because the server does not check ownership.'],
+  ['IP address', 'The address of a device on a network, like 192.168.1.10.'],
+  ['Kernel', 'The core of an operating system that controls hardware, memory and processes.'],
+  ['Least privilege', 'Giving every user and program only the access it needs and nothing more.'],
+  ['Log', 'A file where systems record events such as logins, errors and changes.'],
+  ['Malware', 'Malicious software: viruses, ransomware, spyware, keyloggers and so on.'],
+  ['Nmap', 'A widely used tool that scans hosts for open ports and the services behind them.'],
+  ['OWASP Top 10', 'A regularly updated list of the most critical web application security risks.'],
+  ['Parameterized query', 'A database query where data is sent separately from the SQL code, which prevents SQL injection.'],
+  ['Payload', 'The part of an attack that does the actual work once an exploit succeeds.'],
+  ['Penetration test', 'An authorised, simulated attack to find weaknesses before real attackers do.'],
+  ['Phishing', 'A fake message designed to trick someone into clicking, typing a password or opening a file.'],
+  ['Port', 'A numbered door on a machine where a network service listens, such as 443 for HTTPS.'],
+  ['Privilege escalation', 'Going from limited access to higher access, such as from a normal user to root or Administrator.'],
+  ['Process', 'A program that is currently running.'],
+  ['Ransomware', 'Malware that encrypts files and demands payment to unlock them.'],
+  ['Reconnaissance', 'Gathering information about a target before testing it.'],
+  ['Root', 'The all-powerful administrator account on Linux. Also the top of the file system, /.'],
+  ['Scope', 'The written list of exactly which systems may be tested, and how.'],
+  ['Shell', 'A program that reads text commands and runs them, like bash or PowerShell.'],
+  ['SIEM', 'Security Information and Event Management. Collects logs from many systems so analysts can search them and get alerts.'],
+  ['SOC', 'Security Operations Centre. The team that monitors alerts and responds to incidents.'],
+  ['SPF / DKIM / DMARC', 'Email checks that prove a message really came from the domain it claims.'],
+  ['SQL injection', 'An attack where input changes the meaning of a database query.'],
+  ['TCP / UDP', 'TCP is reliable and connection-based; UDP is fast and sends without checking delivery.'],
+  ['UAC', 'User Account Control. The Windows prompt that asks before a program gets admin rights.'],
+  ['Vulnerability', 'A weakness that could be exploited, such as a bug, a weak password or a misconfiguration.'],
+  ['XSS', 'Cross-site scripting. Getting a website to run attacker-supplied script in other users\' browsers.']
+];
 
 const ROOMS = {
   /* ---------- PYTHON ---------- */
@@ -1255,6 +1692,23 @@ function viewLeaderboard() {
   <div class="ranks">${RANKS.map(r => `<div class="rank-tile${r === cur ? ' cur' : ''}"><b>${r.name}</b><span>${r.min}+ points</span></div>`).join('')}</div>`;
 }
 
+function viewGlossary() {
+  app.innerHTML = `<div class="section-head"><div><div class="eyebrow">${GLOSSARY.length} terms</div><h2 style="font-size:32px;margin-top:6px">Glossary</h2></div></div>
+  <label for="gsearch" class="eyebrow" style="display:block;margin-bottom:6px">Search</label>
+  <input id="gsearch" class="gloss-search" placeholder="Type a word, like port or hash" autocomplete="off">
+  <div class="gloss" id="glist"></div>
+  <p id="gnone" class="lab-note" hidden>No terms match. Try a shorter word.</p>`;
+  const list = document.getElementById('glist'), s = document.getElementById('gsearch'), none = document.getElementById('gnone');
+  const draw = () => {
+    const q = s.value.trim().toLowerCase();
+    const items = GLOSSARY.filter(([t, d]) => !q || t.toLowerCase().includes(q) || d.toLowerCase().includes(q));
+    list.innerHTML = items.map(([t, d]) => `<div class="gloss-item"><b>${esc(t)}</b><span>${esc(d)}</span></div>`).join('');
+    none.hidden = items.length > 0;
+  };
+  s.addEventListener('input', draw);
+  draw();
+}
+
 function viewRoom(id) {
   const r = ROOMS[id];
   if (!r) return viewHome();
@@ -1268,7 +1722,11 @@ function viewRoom(id) {
     <div style="display:flex;flex-direction:column;gap:10px;align-items:flex-start"><div class="path-progress" id="room-prog">${p.done}/${p.total} answered<div class="meter"><i style="width:${(p.done / p.total) * 100}%"></i></div></div>
     ${ORDER[ORDER.indexOf(id) + 1] ? `<a class="btn small" id="next-room" href="#room-${ORDER[ORDER.indexOf(id) + 1]}" hidden>Next room: ${esc(ROOMS[ORDER[ORDER.indexOf(id) + 1]].title)} →</a>` : ''}</div></div>
   <div class="room-grid${r.lab ? '' : ' nolab'}">
-    <div class="tasks">${r.tasks.map((t, i) => taskHTML(t, i, i === (firstOpen === -1 ? 0 : firstOpen))).join('')}</div>
+    <div class="tasks">
+      ${META[id] ? `<section class="goals"><h3>What you will learn</h3><ul>${META[id].learn.map(x => `<li>${x}</li>`).join('')}</ul></section>` : ''}
+      ${r.tasks.map((t, i) => taskHTML(t, i, i === (firstOpen === -1 ? 0 : firstOpen), id)).join('')}
+      ${META[id] ? `<section class="goals recap"><h3>Room summary</h3><ul>${META[id].recap.map(x => `<li>${x}</li>`).join('')}</ul><p>New words in this room? Look them up in the <a href="#glossary">glossary</a>.</p></section>` : ''}
+    </div>
     ${r.lab ? `<aside class="lab" id="lab"></aside>` : ''}
   </div>`;
   r.tasks.forEach(t => t.questions.forEach(q => wireQuestion(q, id)));
@@ -1277,11 +1735,12 @@ function viewRoom(id) {
   if (nb) nb.hidden = !roomDone(id);
 }
 
-function taskHTML(t, i, open) {
+function taskHTML(t, i, open, roomId) {
   const complete = t.questions.every(q => state.solved[q.id]);
+  const deep = DETAIL[roomId] && DETAIL[roomId][i];
   return `<details class="task${complete ? ' complete' : ''}"${open ? ' open' : ''}>
     <summary><span class="task-num">${complete ? '✓' : ''} Task ${i + 1}</span><h3>${esc(t.title)}</h3><span class="chev">›</span></summary>
-    <div class="task-body"><div class="lesson">${t.body}</div>
+    <div class="task-body"><div class="lesson">${t.body}${deep ? `<div class="deep"><div class="eyebrow">In more detail</div>${deep}</div>` : ''}</div>
     <div class="questions">${t.questions.map(q => {
       const s = state.solved[q.id];
       return `<div class="q${s ? ' solved' : ''}" id="q-${q.id}"><label for="in-${q.id}">${esc(q.q)}</label>
@@ -1830,6 +2289,7 @@ function route() {
   if (h.startsWith('room-')) viewRoom(h.slice(5));
   else if (h === 'paths') viewPaths();
   else if (h === 'leaderboard') viewLeaderboard();
+  else if (h === 'glossary') viewGlossary();
   else viewHome();
   renderStats();
   window.scrollTo(0, 0);
