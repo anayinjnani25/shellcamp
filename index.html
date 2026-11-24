@@ -184,6 +184,14 @@ main { padding-block: 32px 64px; }
 .cheats button { font-family: var(--f-mono); font-size: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 6px; padding: 3px 8px; cursor: pointer; }
 .cheats button:hover { border-color: var(--accent); }
 
+/* python lab */
+.py-editor { display: block; width: 100%; height: 250px; resize: vertical; background: var(--term-bg); color: var(--term-fg); border: 0; border-bottom: 1px solid rgba(255,255,255,.07); padding: 12px 14px; font-family: var(--f-mono); font-size: 13px; line-height: 1.55; tab-size: 4; outline: none; white-space: pre; overflow: auto; }
+.py-actions { display: flex; gap: 8px; align-items: center; padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,.07); flex-wrap: wrap; }
+.py-ghost { color: var(--term-fg); border-color: rgba(255,255,255,.18); }
+.py-ghost:hover { background: rgba(255,255,255,.06); }
+.py-out { height: 190px; }
+.try-btn { display: block; margin-top: -8px; margin-bottom: 10px; }
+
 /* fake web app */
 .webapp { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
 .browser-bar { display: flex; gap: 8px; align-items: center; background: var(--surface-2); padding: 8px 12px; font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
@@ -262,14 +270,222 @@ footer { border-top: 1px solid var(--line); padding-block: 20px; font-size: 13px
 /* ============================== CONTENT ============================== */
 const PATHS = [
   { id: 'start', name: 'Start Here: Absolute Basics', blurb: 'No experience needed. How a computer works, how it counts, what ethical hacking is, and how to protect yourself first.', rooms: ['how-computers-work', 'binary-hex', 'hello-ethics', 'stay-safe-online'] },
-  { id: 'foundations', name: 'Foundations', blurb: 'The skills every hacker uses daily. Survive in a Linux shell, understand permissions, and learn how networks and the web carry data.', rooms: ['first-shell', 'linux-permissions', 'networking-101', 'web-101'] },
+  { id: 'foundations', name: 'Foundations', blurb: 'The skills every hacker uses daily. Survive in a Linux shell, understand permissions, and learn how networks and the web carry data.', rooms: ['first-shell', 'linux-permissions', 'windows-basics', 'networking-101', 'web-101'] },
   { id: 'crypto', name: 'Crypto Basics', blurb: 'Encoding, encryption and hashing are not the same thing. Learn the difference and use hashes to check that files are genuine.', rooms: ['encoding-vs-encryption', 'hashing-basics'] },
-  { id: 'offense', name: 'Offensive Basics', blurb: 'Think like an attacker. Scan a target, find hidden pages, and break web apps that trust their input.', rooms: ['nmap-recon', 'dir-discovery', 'login-bypass', 'xss-basics'] },
-  { id: 'defense', name: 'Defensive Basics', blurb: 'Think like a defender. Learn the layers that keep systems safe, then investigate a real-looking break-in.', rooms: ['defense-in-depth', 'log-hunt'] }
+  { id: 'python', name: 'Python for Hackers', blurb: 'Write real Python in your browser. Variables, loops, functions, then scripts that parse logs, check hashes and spot phishing domains.', rooms: ['python-basics', 'python-strings-lists', 'python-functions-data', 'python-security'] },
+  { id: 'offense', name: 'Offensive Basics', blurb: 'Think like an attacker. Scan a target, find hidden pages, and break web apps that trust their input.', rooms: ['nmap-recon', 'dir-discovery', 'login-bypass', 'xss-basics', 'idor'] },
+  { id: 'defense', name: 'Defensive Basics', blurb: 'Think like a defender. Learn the layers that keep systems safe, investigate a break-in, and pull apart a phishing email.', rooms: ['defense-in-depth', 'log-hunt', 'phishing-investigation'] },
+  { id: 'next', name: 'What Comes Next', blurb: 'Where these skills lead: careers, certifications, and legal places to keep practising.', rooms: ['careers'] }
 ];
 const ORDER = PATHS.flatMap(p => p.rooms);
 
 const ROOMS = {
+  /* ---------- PYTHON ---------- */
+  'python-basics': {
+    title: 'Python: First Steps', diff: 'easy', mins: 25, lab: 'python',
+    starter: 'print("Hello, hacker!")\nprint(3 * 4)\n',
+    summary: 'Write and run your first Python code. Printing, maths, variables and if statements.',
+    tasks: [
+      { title: 'Why Python?', body: `
+<p>Python is the most popular language in security. It reads almost like English, and it is used to automate boring work: scanning many machines, parsing huge log files, testing hundreds of inputs.</p>
+<p>The editor on the right runs real Python in your browser. The first run takes a few seconds while Python loads. Press <strong>Run</strong> or <kbd>Ctrl</kbd> + <kbd>Enter</kbd>.</p>
+<p>Click <strong>Try it</strong> on any code block below to copy it into the editor.</p>
+<pre class="py">print("Hello, hacker!")
+print(len("Shellcamp"))</pre>
+<p><code>print()</code> shows a value. <code>len()</code> counts the characters in text.</p>`,
+        questions: [
+          { id: 'py1', q: 'What does print(len("Shellcamp")) output?', a: ['9'], hint: 'Run it, or count the letters.', pts: 10 },
+          { id: 'py2', q: 'What does print(2 ** 10) output? (** means "to the power of")', a: ['1024'], hint: 'Run it in the editor.', pts: 10 }
+        ] },
+      { title: 'Variables and types', body: `
+<p>A <strong>variable</strong> is a name that stores a value. Python has a few basic types:</p>
+<pre class="py">name = "priya"        # str  (text)
+port = 22             # int  (whole number)
+latency = 0.21        # float (decimal)
+is_open = True        # bool (True or False)
+
+print(type(latency))
+print(17 // 5)   # whole-number division
+print(17 % 5)    # remainder</pre>
+<p>Lines starting with <code>#</code> are comments. Python ignores them.</p>`,
+        questions: [
+          { id: 'py3', q: 'What type is 0.21? (one word)', a: ['float', "<class 'float'>"], hint: 'Run print(type(0.21)).', pts: 10 },
+          { id: 'py4', q: 'What does 17 % 5 give?', a: ['2'], hint: 'The remainder after dividing.', pts: 10 }
+        ] },
+      { title: 'Making decisions', body: `
+<p><code>if</code>, <code>elif</code> and <code>else</code> run different code depending on a condition. The indentation (4 spaces) matters in Python: it shows which lines belong to which block.</p>
+<pre class="py">port = 443
+
+if port == 22:
+    print("SSH")
+elif port == 80:
+    print("HTTP")
+elif port == 443:
+    print("HTTPS")
+else:
+    print("unknown")</pre>
+<p><code>==</code> compares two values. A single <code>=</code> stores a value. Mixing them up is the most common beginner bug.</p>`,
+        questions: [
+          { id: 'py5', q: 'What does the code print when port = 8080?', a: ['unknown'], hint: 'Change the first line and run it.', pts: 10 },
+          { id: 'py6', q: 'What does print(10 > 3 and 2 > 5) output?', a: ['false'], hint: 'Both sides must be true for "and".', pts: 10 }
+        ] }
+    ]
+  },
+
+  'python-strings-lists': {
+    title: 'Strings, Lists and Loops', diff: 'easy', mins: 25, lab: 'python',
+    starter: 'secret = "}gnicils_gnirts{CS"\nprint(secret)\n',
+    summary: 'Slice text, store many values in a list, and repeat work with loops. Decode two flags along the way.',
+    tasks: [
+      { title: 'Working with strings', body: `
+<p>You can pick parts of a string with <strong>slicing</strong>: <code>text[start:end:step]</code>.</p>
+<pre class="py">word = "shellcamp"
+print(word[0])      # first character
+print(word[-1])     # last character
+print(word[0:5])    # characters 0 to 4
+print(word.upper())
+print(f"Welcome to {word}!")   # f-string</pre>
+<p>A step of <code>-1</code> walks backwards, so <code>text[::-1]</code> reverses a string.</p>`,
+        questions: [
+          { id: 'ps1', q: 'The editor has a reversed secret. Reverse it to get the flag.', a: ['SC{string_slicing}'], hint: 'print(secret[::-1])', pts: 20, flag: true },
+          { id: 'ps2', q: 'What does print("shellcamp"[0:5]) output?', a: ['shell'], hint: 'Characters 0 to 4.', pts: 10 }
+        ] },
+      { title: 'Lists and for loops', body: `
+<p>A <strong>list</strong> holds many values in order. A <code>for</code> loop runs the same code once for each item:</p>
+<pre class="py">ports = [21, 22, 80, 443]
+
+for p in ports:
+    print("checking port", p)
+
+print(len(ports))
+print(sum(range(1, 11)))   # 1 + 2 + ... + 10</pre>
+<p><code>range(1, 11)</code> produces the numbers 1 to 10. The end number is not included.</p>`,
+        questions: [
+          { id: 'ps3', q: 'What is the sum of all numbers from 1 to 100? Use Python.', a: ['5050'], hint: 'print(sum(range(1, 101)))', pts: 15 }
+        ] },
+      { title: 'Decoding with a loop', body: `
+<p>Every character has a number. <code>ord("A")</code> gives 65 and <code>chr(65)</code> gives "A". Attackers and defenders both meet text hidden as lists of numbers.</p>
+<pre class="py">codes = [83, 67, 123, 108, 111, 111, 112, 115, 125]
+message = ""
+for c in codes:
+    message = message + chr(c)
+print(message)</pre>`,
+        questions: [
+          { id: 'ps4', q: 'What flag do the codes decode to?', a: ['SC{loops}'], hint: 'Run the code block.', pts: 20, flag: true },
+          { id: 'ps5', q: 'What does ord("a") return?', a: ['97'], hint: 'Run print(ord("a")).', pts: 10 }
+        ] }
+    ]
+  },
+
+  'python-functions-data': {
+    title: 'Functions and Dictionaries', diff: 'easy', mins: 30, lab: 'python',
+    starter: 'def to_decimal(binary):\n    return int(binary, 2)\n\nprint(to_decimal("1010"))\n',
+    summary: 'Package code into reusable functions, look things up with dictionaries, and write a small log parser.',
+    tasks: [
+      { title: 'Functions', body: `
+<p>A <strong>function</strong> is a named block of code you can reuse. It takes inputs (parameters) and can <code>return</code> a result.</p>
+<pre class="py">def to_decimal(binary):
+    return int(binary, 2)
+
+print(to_decimal("1010"))
+print(to_decimal("11111111"))</pre>
+<p><code>int(text, 2)</code> reads text as a base-2 number. You did this by hand in the Binary and Hex room.</p>`,
+        questions: [
+          { id: 'pf1', q: 'What does to_decimal("101010") return?', a: ['42'], hint: 'Add a print line and run it.', pts: 10 }
+        ] },
+      { title: 'Dictionaries', body: `
+<p>A <strong>dictionary</strong> maps keys to values, like a real dictionary maps words to meanings:</p>
+<pre class="py">services = {22: "ssh", 80: "http", 443: "https"}
+
+print(services[80])
+print(services.get(3306, "unknown"))
+services[3306] = "mysql"
+print(services)</pre>
+<p><code>.get(key, default)</code> returns the default instead of crashing when the key is missing.</p>`,
+        questions: [
+          { id: 'pf2', q: 'Before adding 3306, what does services.get(21, "unknown") return?', a: ['unknown'], hint: '21 is not a key yet.', pts: 10 }
+        ] },
+      { title: 'Build a log parser', body: `
+<p>Here is the kind of script a defender writes. It counts failed logins per IP address:</p>
+<pre class="py">log = """Failed password for admin from 198.51.100.7
+Accepted password for alice from 192.168.1.20
+Failed password for root from 198.51.100.7
+Failed password for admin from 192.0.2.10
+Failed password for test from 198.51.100.7
+Failed password for admin from 198.51.100.7"""
+
+counts = {}
+for line in log.splitlines():
+    if "Failed" in line:
+        ip = line.split()[-1]          # last word on the line
+        counts[ip] = counts.get(ip, 0) + 1
+
+print(counts)</pre>`,
+        questions: [
+          { id: 'pf3', q: 'How many failed logins are there in total?', a: ['5', 'five'], hint: 'Add the numbers in the printed dictionary.', pts: 15 },
+          { id: 'pf4', q: 'Which IP has the most failed logins?', a: ['198.51.100.7'], hint: 'Run the parser.', pts: 15 }
+        ] }
+    ]
+  },
+
+  'python-security': {
+    title: 'Python for Defenders', diff: 'medium', mins: 30, lab: 'python',
+    starter: 'import hashlib\n\nprint(hashlib.sha256(b"hello").hexdigest())\n',
+    summary: 'Use Python\'s built-in modules to check file hashes, decode Base64, catch lookalike domains and test password strength.',
+    tasks: [
+      { title: 'Hashing with hashlib', body: `
+<p>Python's <code>hashlib</code> module computes hashes, the same fingerprints you met in the Hashes and Checksums room:</p>
+<pre class="py">import hashlib
+
+text = "shellcamp"
+digest = hashlib.sha256(text.encode()).hexdigest()
+print(digest)
+print(digest[:8])   # first 8 characters</pre>
+<p><code>.encode()</code> turns text into bytes, because hash functions work on bytes.</p>`,
+        questions: [
+          { id: 'pz1', q: 'What are the first 8 characters of the SHA-256 hash of "shellcamp"?', a: ['3feccade'], hint: 'Run the code block.', pts: 20 }
+        ] },
+      { title: 'Decoding Base64', body: `
+<pre class="py">import base64
+
+encoded = "U0N7cHl0aG9uX2RlY29kZXN9"
+print(base64.b64decode(encoded).decode())</pre>`,
+        questions: [
+          { id: 'pz2', q: 'What flag does the Base64 string decode to?', a: ['SC{python_decodes}'], hint: 'Run the code block.', pts: 20, flag: true }
+        ] },
+      { title: 'Catch lookalike domains', body: `
+<p>Phishing domains swap letters for similar characters, like <code>0</code> for <code>o</code> or <code>1</code> for <code>l</code>. This checker undoes the swaps and compares against trusted domains:</p>
+<pre class="py">trusted = ["paypal.com", "google.com", "microsoft.com"]
+swaps = {"0": "o", "1": "l", "3": "e", "5": "s"}
+
+def looks_fake(domain):
+    cleaned = "".join(swaps.get(ch, ch) for ch in domain)
+    return domain not in trusted and cleaned in trusted
+
+inbox = ["paypal.com", "paypa1.com", "g00gle.com", "news.example.org", "micr0soft.com"]
+for d in inbox:
+    if looks_fake(d):
+        print("SUSPICIOUS:", d)</pre>`,
+        questions: [
+          { id: 'pz3', q: 'How many suspicious domains does the checker print?', a: ['3', 'three'], hint: 'Run it and count.', pts: 15 }
+        ] },
+      { title: 'Password strength checker', body: `
+<pre class="py">def is_strong(pw):
+    return (len(pw) >= 12
+            and any(c.isdigit() for c in pw)
+            and any(c.isupper() for c in pw)
+            and any(c.islower() for c in pw))
+
+for pw in ["Summer2026", "correct-Horse-7-battery", "PASSWORD123456"]:
+    print(pw, is_strong(pw))</pre>
+<p>Try adding your own rule, for example rejecting passwords that contain the word "password".</p>`,
+        questions: [
+          { id: 'pz4', q: 'Is "Summer2026" strong according to this checker? (True/False)', a: ['false'], hint: 'Count its length.', pts: 10 },
+          { id: 'pz5', q: 'Why does "PASSWORD123456" fail? It has no ______ letters.', a: ['lowercase', 'lower case', 'lower'], hint: 'Look at which rule it breaks.', pts: 10 }
+        ] }
+    ]
+  },
+
   'hello-ethics': {
     title: 'Hello, Ethics', diff: 'easy', mins: 15, lab: null,
     summary: 'What ethical hacking is, the CIA triad, and the one rule you never break.',
@@ -499,6 +715,128 @@ cursor.execute("SELECT * FROM users WHERE username = %s", (user,))</pre>
         questions: [
           { id: 'lg4', q: 'Which account did the attacker successfully log in to?', a: ['backup'], hint: 'grep Accepted /var/log/auth.log', pts: 20 },
           { id: 'lg5', q: 'The attacker left a note in that account\'s home directory. What is the flag?', a: ['SC{weak_passwords_get_guessed}'], hint: 'ls -a /home/backup', pts: 30, flag: true }
+        ] }
+    ]
+  },
+
+  'windows-basics': {
+    title: 'Windows Basics', diff: 'easy', mins: 20, lab: null,
+    summary: 'Most office computers run Windows. Learn its accounts, its command line and where it records security events.',
+    tasks: [
+      { title: 'Accounts and UAC', body: `
+<p>Windows has <strong>standard users</strong> and <strong>administrators</strong>. Even an admin normally runs with limited rights. When a program needs more, <strong>User Account Control</strong> (UAC) shows the "Do you want to allow this app to make changes?" prompt.</p>
+<p>The most powerful account is not Administrator but <code>SYSTEM</code>, which the operating system itself uses.</p>`,
+        questions: [
+          { id: 'wn1', q: 'What does UAC stand for?', a: ['user account control'], hint: 'Read the first paragraph.', pts: 10 },
+          { id: 'wn2', q: 'Which built-in Windows account is even more powerful than Administrator?', a: ['system'], hint: 'All capitals in the text.', pts: 10 }
+        ] },
+      { title: 'Command Prompt and PowerShell', body: `
+<p>Windows has two command lines. <strong>Command Prompt</strong> (<code>cmd</code>) is the old one; <strong>PowerShell</strong> is the modern one. Try these on your own PC:</p>
+<div class="tbl-wrap"><table><tr><th>Task</th><th>Windows</th><th>Linux equivalent</th></tr>
+<tr><td>Who am I?</td><td><code>whoami</code></td><td><code>whoami</code></td></tr>
+<tr><td>List files</td><td><code>dir</code></td><td><code>ls</code></td></tr>
+<tr><td>Read a file</td><td><code>type file.txt</code></td><td><code>cat file.txt</code></td></tr>
+<tr><td>Network settings</td><td><code>ipconfig</code></td><td><code>ip a</code></td></tr>
+<tr><td>Running programs</td><td><code>tasklist</code></td><td><code>ps</code></td></tr></table></div>`,
+        questions: [
+          { id: 'wn3', q: 'Which Windows command lists files, like ls on Linux?', a: ['dir'], hint: 'Short for directory.', pts: 10 },
+          { id: 'wn4', q: 'Which Windows command lists running programs?', a: ['tasklist'], hint: 'A list of tasks.', pts: 10 }
+        ] },
+      { title: 'Event Viewer', body: `
+<p>Windows records security events in <strong>Event Viewer</strong>, under <em>Windows Logs → Security</em>. Each kind of event has an ID number. Defenders memorise a few:</p>
+<div class="tbl-wrap"><table><tr><th>Event ID</th><th>Meaning</th></tr>
+<tr><td>4624</td><td>Successful logon</td></tr><tr><td>4625</td><td>Failed logon</td></tr>
+<tr><td>4720</td><td>A user account was created</td></tr><tr><td>1102</td><td>The security log was cleared</td></tr></table></div>
+<p>Many 4625 events followed by a 4624 looks like a password-guessing attack that worked. Event 1102 is a red flag: attackers clear logs to hide their tracks.</p>`,
+        questions: [
+          { id: 'wn5', q: 'Which Event ID means a failed logon?', a: ['4625'], hint: 'Check the table.', pts: 10 },
+          { id: 'wn6', q: 'Which Event ID could mean an attacker is hiding their tracks?', a: ['1102'], hint: 'The log was cleared.', pts: 15 }
+        ] }
+    ]
+  },
+
+  'idor': {
+    title: 'Broken Access Control', diff: 'easy', mins: 20, lab: 'web-idor',
+    summary: 'Change one number in a URL and see someone else\'s account. The number one risk in the OWASP Top 10.',
+    tasks: [
+      { title: 'Authentication vs authorization', body: `
+<p><strong>Authentication</strong> checks <em>who you are</em> (logging in). <strong>Authorization</strong> checks <em>what you are allowed to do</em>.</p>
+<p>Broken access control means the authorization check is missing or wrong. It tops the OWASP Top 10 list of web risks.</p>`,
+        questions: [
+          { id: 'id1', q: 'Which one checks what you are allowed to do: authentication or authorization?', a: ['authorization', 'authorisation'], hint: 'Authentication = who you are.', pts: 10 }
+        ] },
+      { title: 'Change the ID', body: `
+<p>You are logged in to the practice app as <strong>student</strong>. Look at the address bar: your profile is loaded with <code>?id=1005</code>.</p>
+<p>The server should check that you own the profile you ask for. Does it? Change the number in the address bar and press <strong>Go</strong>. This bug is called an <strong>IDOR</strong> (Insecure Direct Object Reference).</p>`,
+        questions: [
+          { id: 'id2', q: 'Whose profile is at id 1002?', a: ['priya'], hint: 'Change the id to 1002.', pts: 10 },
+          { id: 'id3', q: 'The admin account has a lower id than yours. What flag is on the admin profile?', a: ['SC{check_every_id}'], hint: 'Try ids below 1005, starting at 1001.', pts: 30, flag: true }
+        ] },
+      { title: 'The fix', body: `
+<p>The fix is on the server: for every request, check that the logged-in user is allowed to see that record.</p>
+<pre>profile = db.get_profile(request.id)
+if profile.owner != current_user and not current_user.is_admin:
+    return 403  # Forbidden</pre>
+<p>Hard-to-guess IDs help a little, but they are not a fix. Only the server-side check is.</p>`,
+        questions: [
+          { id: 'id4', q: 'What does IDOR stand for?', a: ['insecure direct object reference'], hint: 'Read Task 2.', pts: 10 }
+        ] }
+    ]
+  },
+
+  'phishing-investigation': {
+    title: 'Phishing Investigation', diff: 'medium', mins: 25, lab: 'phish',
+    summary: 'A teacher reported a suspicious password-reset email. Read its hidden headers and prove it is fake.',
+    tasks: [
+      { title: 'Email headers', body: `
+<p>Every email carries <strong>headers</strong>: hidden lines that record where it came from and which servers handled it. Your mail app hides them, but analysts read them first.</p>
+<p>The reported email is saved as <code>reported.eml</code>. Read it: <code>cat reported.eml</code>. Use <code>grep</code> to pull out single headers, for example <code>grep Received reported.eml</code>.</p>`,
+        questions: [
+          { id: 'ph1', q: 'What IP address did the email really come from? (Received header)', a: ['203.0.113.99'], hint: 'grep Received reported.eml', pts: 15 },
+          { id: 'ph2', q: 'Replies would go to a different address than the sender. What is the Reply-To address?', a: ['reset-team@quickmail.example'], hint: 'grep Reply-To reported.eml', pts: 15 }
+        ] },
+      { title: 'SPF, DKIM and DMARC', body: `
+<p>Three checks prove an email really comes from the domain it claims:</p>
+<ul><li><strong>SPF</strong>: is this server allowed to send mail for the domain?</li><li><strong>DKIM</strong>: does the email carry a valid digital signature from the domain?</li><li><strong>DMARC</strong>: the domain owner's policy for mail that fails those checks.</li></ul>
+<p>The receiving server writes the results in the <code>Authentication-Results</code> header.</p>`,
+        questions: [
+          { id: 'ph3', q: 'What was the SPF result?', a: ['fail', 'spf=fail'], hint: 'grep Authentication reported.eml', pts: 15 },
+          { id: 'ph4', q: 'The sender domain imitates brightside-school.com. What is the fake domain?', a: ['brightside-schoo1.com'], hint: 'Look closely at the From line. One letter is a number.', pts: 15 }
+        ] },
+      { title: 'Write it up', body: `
+<p>Attackers often reuse tools, and some leave tracking IDs in custom headers starting with <code>X-</code>. Search for them: <code>grep X- reported.eml</code>.</p>
+<p>In a real incident you would now block the sender domain and IP, search for other staff who got the same email, and reset the password of anyone who clicked.</p>`,
+        questions: [
+          { id: 'ph5', q: 'What flag is hidden in a custom X- header?', a: ['SC{headers_tell_the_truth}'], hint: 'grep X- reported.eml', pts: 25, flag: true }
+        ] }
+    ]
+  },
+
+  'careers': {
+    title: 'Careers and Next Steps', diff: 'easy', mins: 15, lab: null,
+    summary: 'The jobs these skills lead to, the certifications worth knowing, and legal ways to keep practising.',
+    tasks: [
+      { title: 'Jobs in security', body: `
+<div class="tbl-wrap"><table><tr><th>Role</th><th>What they do</th></tr>
+<tr><td>SOC analyst</td><td>Watches alerts in a Security Operations Centre and investigates incidents. A common first job.</td></tr>
+<tr><td>Penetration tester</td><td>Hacks systems with permission and writes reports on what to fix.</td></tr>
+<tr><td>Security engineer</td><td>Builds defences: firewalls, logging, secure cloud setups.</td></tr>
+<tr><td>Bug bounty hunter</td><td>Finds bugs in companies' public programmes and gets paid per valid report.</td></tr></table></div>`,
+        questions: [
+          { id: 'cr1', q: 'What do the letters SOC stand for?', a: ['security operations centre', 'security operations center'], hint: 'Read the first row.', pts: 10 }
+        ] },
+      { title: 'Certifications', body: `
+<p>Certifications are not required, but they help you get a first job. A common order:</p>
+<ul><li><strong>CompTIA Security+</strong>: broad security knowledge. Good first certificate.</li><li><strong>eJPT</strong>: a practical beginner pentesting exam.</li><li><strong>OSCP</strong>: a hard 24-hour hands-on exam that employers respect a lot.</li></ul>`,
+        questions: [
+          { id: 'cr2', q: 'Which certification has a 24-hour hands-on exam?', a: ['oscp'], hint: 'The last bullet.', pts: 10 }
+        ] },
+      { title: 'Keep practising legally', body: `
+<ul><li><strong>CTF competitions</strong> (Capture The Flag): events with puzzles just like the rooms here. Look up picoCTF for students.</li><li><strong>Practice platforms</strong> with their own legal lab machines.</li><li><strong>Bug bounty programmes</strong>: companies publish a scope and promise not to take legal action if you stay inside it.</li></ul>
+<p class="callout">Found a bug outside any programme? Report it privately to the company and give them time to fix it before telling anyone. This is called <strong>responsible disclosure</strong>.</p>`,
+        questions: [
+          { id: 'cr3', q: 'What does CTF stand for?', a: ['capture the flag'], hint: 'You have been doing it all along.', pts: 10 },
+          { id: 'cr4', q: 'Privately reporting a bug and giving the company time to fix it is called responsible ______.', a: ['disclosure'], hint: 'Read the yellow box.', pts: 10 }
         ] }
     ]
   },
@@ -795,8 +1133,8 @@ sha256sum toolkit-v2.iso</pre>`,
 
 /* ============================== STATE ============================== */
 const RANKS = [
-  { name: 'Script Newbie', min: 0 }, { name: 'Packet Sniffer', min: 150 }, { name: 'Port Prober', min: 400 },
-  { name: 'Shell Popper', min: 700 }, { name: 'Root Hunter', min: 850 }, { name: 'Zero-Day Sage', min: 1000 }
+  { name: 'Script Newbie', min: 0 }, { name: 'Packet Sniffer', min: 200 }, { name: 'Port Prober', min: 500 },
+  { name: 'Shell Popper', min: 850 }, { name: 'Root Hunter', min: 1150 }, { name: 'Zero-Day Sage', min: 1450 }
 ];
 const KEY = 'shellcamp-progress-v1';
 let state = { solved: {}, points: 0, streak: 0, lastDay: null };
@@ -934,7 +1272,7 @@ function viewRoom(id) {
     ${r.lab ? `<aside class="lab" id="lab"></aside>` : ''}
   </div>`;
   r.tasks.forEach(t => t.questions.forEach(q => wireQuestion(q, id)));
-  if (r.lab === 'web') mountWebLab(); else if (r.lab === 'web-xss') mountXssLab(); else if (r.lab) mountTerminal(r.lab);
+  if (r.lab === 'web') mountWebLab(); else if (r.lab === 'web-xss') mountXssLab(); else if (r.lab === 'web-idor') mountIdorLab(); else if (r.lab === 'python') mountPython(r.starter); else if (r.lab) mountTerminal(r.lab);
   const nb = document.getElementById('next-room');
   if (nb) nb.hidden = !roomDone(id);
 }
@@ -1070,6 +1408,39 @@ const LABS = {
     cheats: ['ping 10.10.30.2', 'gobuster dir -u http://10.10.30.2 -w common.txt', 'curl http://10.10.30.2/backup/'],
     help: '  ping <ip>   gobuster dir -u <url> -w common.txt   curl <url>',
     files: { '/home/student/common.txt': 'admin\nbackup\ncss\nimages\nlogin\nold\ntest\nuploads\n', '/home/student/target.txt': 'Target: 10.10.30.2 (this host only)\n' }
+  },
+  phish: {
+    user: 'analyst', host: 'soc-ws04', home: '/home/analyst', ip: '10.20.0.40', title: 'SOC workstation · phishing triage',
+    cheats: ['ls', 'cat reported.eml', 'grep Received reported.eml', 'grep Reply-To reported.eml', 'grep Authentication reported.eml', 'grep X- reported.eml'],
+    files: {
+      '/home/analyst/reported.eml': [
+        'Return-Path: <bounce-8812@mailer.quickmail.example>',
+        'Received: from mailer.quickmail.example (unknown [203.0.113.99])',
+        '        by mx1.brightside-school.com with ESMTP id 4Kq7Zt; Tue, 25 Nov 2026 07:42:10 +0000',
+        'Authentication-Results: mx1.brightside-school.com;',
+        '        spf=fail (sender IP is 203.0.113.99) smtp.mailfrom=brightside-schoo1.com;',
+        '        dkim=none (message not signed);',
+        '        dmarc=fail action=quarantine header.from=brightside-schoo1.com',
+        'From: "Brightside IT Helpdesk" <helpdesk@brightside-schoo1.com>',
+        'Reply-To: reset-team@quickmail.example',
+        'To: r.mehta@brightside-school.com',
+        'Subject: Action required: your password expires today',
+        'Date: Tue, 25 Nov 2026 07:42:05 +0000',
+        'X-Mailer: BulkSender 4.2',
+        'X-Campaign-ID: SC{headers_tell_the_truth}',
+        'Content-Type: text/html; charset=UTF-8',
+        '',
+        'Dear staff member,',
+        '',
+        'Your school email password expires TODAY. To avoid losing access,',
+        'confirm your password within 2 hours:',
+        '',
+        '    http://brightside-schoo1.com/reset',
+        '',
+        'Brightside IT Helpdesk'
+      ].join('\n') + '\n',
+      '/home/analyst/ticket.txt': 'Ticket #4471 - Reported by R. Mehta (Maths)\n"Got an email saying my password expires. Looks odd. Did not click."\n'
+    }
   }
 };
 
@@ -1365,6 +1736,91 @@ function mountXssLab() {
   document.getElementById('xgo').onclick = go;
   q.addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
   safe.addEventListener('change', () => { if (q.value) go(); });
+}
+
+/* ============================== WEB LAB (access control simulation) ============================== */
+function mountIdorLab() {
+  const lab = document.getElementById('lab');
+  const PROFILES = {
+    1001: { name: 'admin', role: 'Administrator', email: 'admin@northwind.example', note: 'Flag: <code>SC{check_every_id}</code>' },
+    1002: { name: 'priya', role: 'Teacher', email: 'priya@northwind.example', note: 'Classes: Year 9 Maths, Year 11 Physics' },
+    1003: { name: 'devon', role: 'Teacher', email: 'devon@northwind.example', note: 'Classes: Year 7 English' },
+    1004: { name: 'meera', role: 'Student', email: 'meera@northwind.example', note: 'Year 10' },
+    1005: { name: 'student', role: 'Student (you)', email: 'student@northwind.example', note: 'Year 10. This is your own profile.' }
+  };
+  lab.innerHTML = `<div class="webapp"><div class="browser-bar"><span>←</span><span style="white-space:nowrap">10.10.50.8/profile?id=</span><input id="iid" aria-label="Profile id in the address bar" value="1005" style="width:70px;font-family:var(--f-mono);font-size:12px;padding:2px 6px;border:1px solid var(--line);border-radius:4px;background:var(--bg);color:var(--ink)"><button class="btn small" id="igo" style="padding:3px 10px">Go</button></div>
+    <div class="webapp-body" id="ibody"></div></div>
+    <div class="lab-note">This app is a simulation. Logged in as <strong>student</strong>.</div>`;
+  const body = document.getElementById('ibody'), inp = document.getElementById('iid');
+  function show() {
+    const p = PROFILES[inp.value.trim()];
+    if (!p) { body.innerHTML = `<div class="eyebrow">Northwind School · My profile</div><h3>404 Not Found</h3><p style="margin:0;color:var(--muted)">No user with id ${esc(inp.value)}.</p>`; return; }
+    body.innerHTML = `<div class="eyebrow">Northwind School · My profile</div><h3>${esc(p.name)}</h3>
+      <div class="tbl-wrap"><table class="lesson" style="border-collapse:collapse;font-size:14px;width:100%"><tr><td style="color:var(--muted);padding:4px 8px 4px 0">Role</td><td>${esc(p.role)}</td></tr><tr><td style="color:var(--muted);padding:4px 8px 4px 0">Email</td><td>${esc(p.email)}</td></tr></table></div>
+      <div class="result ${p.name === 'admin' ? 'ok' : 'no'}" style="${p.name === 'admin' ? '' : 'color:var(--ink)'}">${p.note}</div>`;
+  }
+  document.getElementById('igo').onclick = show;
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') show(); });
+  show();
+}
+
+/* ============================== PYTHON LAB (Pyodide) ============================== */
+let pyLoading = null;
+function loadPython() {
+  if (!pyLoading) {
+    pyLoading = new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/pyodide@0.26.4/pyodide.js';
+      s.onload = () => window.loadPyodide({ indexURL: 'https://cdn.jsdelivr.net/npm/pyodide@0.26.4/' }).then(resolve, reject);
+      s.onerror = () => reject(new Error('script blocked'));
+      document.head.appendChild(s);
+    }).catch(e => { pyLoading = null; throw e; });
+  }
+  return pyLoading;
+}
+
+function mountPython(starter) {
+  const lab = document.getElementById('lab');
+  lab.innerHTML = `<div class="lab-frame"><div class="lab-bar"><span class="dot"></span><span>Python 3 editor</span><span class="ip" id="pystatus">ready</span></div>
+    <textarea class="py-editor" id="pycode" aria-label="Python code" spellcheck="false" autocapitalize="off"></textarea>
+    <div class="py-actions"><button class="btn small" id="pyrun">Run ▶</button><button class="btn small ghost py-ghost" id="pyclear">Clear output</button><span class="d" style="font-size:12px;color:var(--term-dim)">Ctrl + Enter to run</span></div>
+    <div class="term py-out" id="pyout"></div></div>
+    <div class="lab-note">Real Python running in your browser. Nothing is sent to a server.</div>`;
+  const code = document.getElementById('pycode'), out = document.getElementById('pyout'), status = document.getElementById('pystatus');
+  code.value = starter || '';
+  const write = (t, cls) => { const d = document.createElement('div'); if (cls) d.className = cls; d.textContent = t; out.appendChild(d); out.scrollTop = out.scrollHeight; };
+  async function run() {
+    const btn = document.getElementById('pyrun');
+    btn.disabled = true;
+    let py;
+    try {
+      if (!pyLoading) status.textContent = 'loading Python…';
+      py = await loadPython();
+    } catch (e) {
+      status.textContent = 'unavailable';
+      write('Python could not load here. Open the site at https://anayinjnani25.github.io/shellcamp/ to use the editor.', 'e');
+      btn.disabled = false; return;
+    }
+    status.textContent = 'running…';
+    write('>>> run', 'p');
+    py.setStdout({ batched: s => write(s) });
+    py.setStderr({ batched: s => write(s, 'e') });
+    try { await py.runPythonAsync(code.value); }
+    catch (e) { const lines = String(e.message || e).trim().split('\n'); write(lines.slice(-3).join('\n'), 'e'); }
+    status.textContent = 'ready'; btn.disabled = false;
+  }
+  document.getElementById('pyrun').onclick = run;
+  document.getElementById('pyclear').onclick = () => { out.innerHTML = ''; };
+  code.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); run(); }
+    else if (e.key === 'Tab' && !e.shiftKey) { e.preventDefault(); const st = code.selectionStart; code.setRangeText('    ', st, code.selectionEnd, 'end'); }
+  });
+  document.querySelectorAll('pre.py').forEach(pre => {
+    const b = document.createElement('button');
+    b.className = 'linkbtn try-btn'; b.textContent = 'Try it ↗';
+    b.onclick = () => { code.value = pre.textContent; code.focus(); toast('Copied into the editor'); };
+    pre.after(b);
+  });
 }
 
 /* ============================== ROUTER ============================== */
