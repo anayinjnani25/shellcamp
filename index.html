@@ -1,0 +1,1386 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Learn ethical hacking from scratch with guided rooms and browser-based practice labs.">
+</head>
+<body>
+<title>Shellcamp</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: sticky top bar, centered 1120px column; room pages split into lesson tasks (left) and a sticky lab panel (right). */
+:root {
+  --bg: #F2F4F8;
+  --surface: #FFFFFF;
+  --surface-2: #E9EDF4;
+  --ink: #131A2A;
+  --muted: #586379;
+  --line: #D6DCE6;
+  --accent: #2E47F0;
+  --accent-soft: #E3E7FE;
+  --on-accent: #FFFFFF;
+  --flag: #A55F00;
+  --flag-soft: #FBEFD9;
+  --ok: #18804A;
+  --ok-soft: #DDF3E6;
+  --bad: #C22B3A;
+  --term-bg: #0E131E;
+  --term-fg: #D3DBE8;
+  --term-dim: #6F7D96;
+  --term-prompt: #8FA2FF;
+  --term-hl: #F2B24C;
+  --f-display: "Chakra Petch", "Segoe UI", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  --radius: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0B0F17; --surface: #131927; --surface-2: #1A2233; --ink: #E5E9F1; --muted: #8C97AB;
+    --line: #253046; --accent: #7D8EFF; --accent-soft: #1E2650; --on-accent: #0B0F17;
+    --flag: #F2A83C; --flag-soft: #2E2312; --ok: #45C982; --ok-soft: #11291C; --bad: #FF6D7A;
+    --term-bg: #070A10; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0B0F17; --surface: #131927; --surface-2: #1A2233; --ink: #E5E9F1; --muted: #8C97AB;
+  --line: #253046; --accent: #7D8EFF; --accent-soft: #1E2650; --on-accent: #0B0F17;
+  --flag: #F2A83C; --flag-soft: #2E2312; --ok: #45C982; --ok-soft: #11291C; --bad: #FF6D7A;
+  --term-bg: #070A10; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.6; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+a { color: var(--accent); }
+h1, h2, h3 { font-family: var(--f-display); line-height: 1.15; text-wrap: balance; margin: 0; letter-spacing: .01em; }
+code, kbd { font-family: var(--f-mono); font-size: .9em; background: var(--surface-2); padding: .1em .35em; border-radius: 4px; }
+pre { font-family: var(--f-mono); font-size: 13px; background: var(--surface-2); padding: 12px 14px; border-radius: 8px; overflow-x: auto; margin: 0; }
+button, input { font: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+
+/* top bar */
+.topbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line); }
+.topbar .wrap { display: flex; align-items: center; gap: 20px; min-height: 60px; flex-wrap: wrap; padding-block: 8px; }
+.logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); font-family: var(--f-display); font-weight: 700; font-size: 20px; }
+.logo-mark { width: 30px; height: 30px; border-radius: 7px; background: var(--accent); color: var(--on-accent); display: grid; place-items: center; font-family: var(--f-mono); font-size: 14px; font-weight: 500; }
+nav.main { display: flex; gap: 4px; flex-wrap: wrap; }
+nav.main a { text-decoration: none; color: var(--muted); padding: 6px 12px; border-radius: 6px; font-weight: 500; }
+nav.main a:hover { color: var(--ink); background: var(--surface-2); }
+nav.main a.on { color: var(--accent); background: var(--accent-soft); }
+.stats { margin-left: auto; display: flex; gap: 14px; align-items: center; font-variant-numeric: tabular-nums; flex-wrap: wrap; }
+.stat { display: flex; flex-direction: column; line-height: 1.1; }
+.stat b { font-family: var(--f-display); font-size: 17px; }
+.stat span { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.rank-chip { font-family: var(--f-mono); font-size: 12px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--accent); color: var(--accent); white-space: nowrap; }
+
+main { padding-block: 32px 64px; }
+.eyebrow { font-family: var(--f-mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+
+/* home */
+.hero { display: grid; grid-template-columns: 1.1fr .9fr; gap: 32px; align-items: center; margin-bottom: 40px; }
+.hero h1 { font-size: clamp(34px, 5vw, 54px); margin: 10px 0 14px; }
+.hero h1 em { font-style: normal; color: var(--accent); }
+.hero p { color: var(--muted); max-width: 52ch; margin: 0 0 20px; font-size: 16px; }
+.btn { display: inline-flex; align-items: center; gap: 8px; border: 0; cursor: pointer; text-decoration: none; background: var(--accent); color: var(--on-accent); padding: 10px 18px; border-radius: 8px; font-weight: 600; }
+.btn:hover { filter: brightness(1.08); }
+.btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+.btn.ghost:hover { background: var(--surface-2); }
+.btn.small { padding: 6px 12px; font-size: 14px; }
+.hero-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.hero-term { background: var(--term-bg); color: var(--term-fg); font-family: var(--f-mono); font-size: 13px; border-radius: var(--radius); padding: 16px 18px; min-width: 0; line-height: 1.7; }
+.hero-term .p { color: var(--term-prompt); }
+.hero-term .h { color: var(--term-hl); }
+.hero-term .d { color: var(--term-dim); }
+.rules { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 40px; }
+.rule { border-top: 2px solid var(--ink); padding-top: 12px; }
+.rule h3 { font-size: 17px; margin-bottom: 6px; }
+.rule p { margin: 0; color: var(--muted); font-size: 14px; }
+.section-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin: 8px 0 16px; flex-wrap: wrap; }
+.section-head h2 { font-size: 24px; }
+
+/* path & room cards */
+.path { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; margin-bottom: 18px; }
+.path-top { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; flex-wrap: wrap; margin-bottom: 14px; }
+.path-top h3 { font-size: 21px; }
+.path-top p { margin: 4px 0 0; color: var(--muted); max-width: 60ch; }
+.meter { height: 6px; background: var(--surface-2); border-radius: 99px; overflow: hidden; }
+.meter i { display: block; height: 100%; background: var(--accent); border-radius: 99px; transition: width .4s; }
+.path-progress { min-width: 170px; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.path-progress .meter { margin-top: 6px; }
+.rooms { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+.room-card { display: flex; flex-direction: column; gap: 8px; text-decoration: none; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 14px; transition: border-color .15s, transform .15s; }
+.room-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.room-card h4 { margin: 0; font-family: var(--f-display); font-size: 17px; }
+.room-card p { margin: 0; font-size: 13.5px; color: var(--muted); flex: 1; }
+.room-meta { display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--muted); font-family: var(--f-mono); flex-wrap: wrap; }
+.diff { padding: 1px 8px; border-radius: 99px; font-weight: 500; }
+.diff.easy { background: var(--ok-soft); color: var(--ok); }
+.diff.medium { background: var(--flag-soft); color: var(--flag); }
+.done-tag { margin-left: auto; color: var(--ok); font-weight: 500; }
+
+/* room page */
+.crumbs { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+.crumbs a { color: var(--muted); }
+.room-head { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
+.room-head h1 { font-size: clamp(28px, 4vw, 40px); margin: 6px 0 8px; }
+.room-head p { margin: 0; color: var(--muted); max-width: 62ch; }
+.room-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 460px); gap: 24px; align-items: start; }
+.room-grid.nolab { grid-template-columns: minmax(0, 760px); }
+.tasks { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.task { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+.task > summary { list-style: none; cursor: pointer; padding: 14px 18px; display: flex; gap: 12px; align-items: center; }
+.task > summary::-webkit-details-marker { display: none; }
+.task-num { font-family: var(--f-mono); font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 6px; padding: 2px 7px; white-space: nowrap; }
+.task.complete .task-num { background: var(--ok); border-color: var(--ok); color: var(--surface); }
+.task > summary h3 { font-size: 17px; flex: 1; }
+.chev { transition: transform .2s; color: var(--muted); }
+.task[open] .chev { transform: rotate(90deg); }
+.task-body { padding: 0 18px 18px; border-top: 1px solid var(--line); }
+.task-body > .lesson { max-width: 68ch; }
+.task-body .lesson p, .task-body .lesson ul, .task-body .lesson pre, .task-body .lesson table { margin: 14px 0; }
+.task-body .lesson ul { padding-left: 20px; }
+.task-body .lesson li { margin: 4px 0; }
+.tbl-wrap { overflow-x: auto; }
+.lesson table { border-collapse: collapse; font-size: 14px; min-width: 100%; }
+.lesson th, .lesson td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--line); }
+.lesson th { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; }
+.callout { border-left: 3px solid var(--flag); background: var(--flag-soft); padding: 10px 14px; border-radius: 0 8px 8px 0; font-size: 14px; }
+.questions { display: flex; flex-direction: column; gap: 14px; margin-top: 18px; padding-top: 16px; border-top: 1px dashed var(--line); }
+.q label { display: block; font-weight: 500; margin-bottom: 6px; }
+.q-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.q-row input { flex: 1 1 200px; min-width: 0; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); font-family: var(--f-mono); font-size: 14px; }
+.q-row input.wrong { border-color: var(--bad); animation: shake .3s; }
+.q.solved input { border-color: var(--ok); background: var(--ok-soft); color: var(--ok); }
+.q.solved .btn { background: var(--ok); }
+.q-foot { display: flex; gap: 12px; align-items: center; font-size: 13px; margin-top: 6px; color: var(--muted); flex-wrap: wrap; }
+.linkbtn { background: none; border: 0; color: var(--accent); cursor: pointer; padding: 0; font-size: 13px; }
+.hint { font-size: 13.5px; color: var(--muted); background: var(--surface-2); padding: 8px 12px; border-radius: 8px; margin-top: 8px; }
+.pts { font-family: var(--f-mono); }
+@keyframes shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+/* lab panel */
+.lab { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 76px); min-width: 0; }
+.lab-frame { background: var(--term-bg); border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line); }
+.lab-bar { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: rgba(255,255,255,.04); border-bottom: 1px solid rgba(255,255,255,.07); font-family: var(--f-mono); font-size: 12px; color: var(--term-dim); }
+.lab-bar .dot { width: 8px; height: 8px; border-radius: 50%; background: #3CC47A; box-shadow: 0 0 0 3px rgba(60,196,122,.18); }
+.lab-bar .ip { margin-left: auto; color: var(--term-hl); }
+.term { height: 440px; overflow-y: auto; padding: 12px 14px; font-family: var(--f-mono); font-size: 13px; color: var(--term-fg); line-height: 1.55; white-space: pre-wrap; word-break: break-word; cursor: text; }
+.term .p { color: var(--term-prompt); }
+.term .e { color: #FF8A95; }
+.term .d { color: var(--term-dim); }
+.term .h { color: var(--term-hl); }
+.term-in { display: flex; gap: 8px; }
+.term-in input { flex: 1; min-width: 0; background: transparent; border: 0; outline: 0; color: var(--term-fg); font-family: var(--f-mono); font-size: 13px; padding: 0; caret-color: var(--term-hl); }
+.lab-note { font-size: 12.5px; color: var(--muted); margin-top: 8px; }
+.cheats { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.cheats button { font-family: var(--f-mono); font-size: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 6px; padding: 3px 8px; cursor: pointer; }
+.cheats button:hover { border-color: var(--accent); }
+
+/* fake web app */
+.webapp { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.browser-bar { display: flex; gap: 8px; align-items: center; background: var(--surface-2); padding: 8px 12px; font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
+.browser-bar .url { flex: 1; background: var(--bg); border-radius: 6px; padding: 3px 10px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.webapp-body { padding: 22px; display: flex; flex-direction: column; gap: 12px; }
+.webapp-body h3 { font-size: 20px; }
+.webapp-body label { font-size: 13px; color: var(--muted); display: flex; flex-direction: column; gap: 4px; }
+.webapp-body input { padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); font-family: var(--f-mono); }
+.sqlbox { font-family: var(--f-mono); font-size: 12.5px; background: var(--term-bg); color: var(--term-fg); padding: 10px 12px; border-radius: 8px; overflow-x: auto; white-space: pre-wrap; word-break: break-all; }
+.sqlbox .inj { color: var(--term-hl); }
+.sqlbox .cm { color: var(--term-dim); text-decoration: line-through; }
+.result { padding: 10px 12px; border-radius: 8px; font-size: 14px; }
+.result.ok { background: var(--ok-soft); color: var(--ok); }
+.result.no { background: var(--surface-2); color: var(--bad); }
+
+/* leaderboard */
+.board { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.board-row { display: grid; grid-template-columns: 48px minmax(0, 1fr) 140px 90px; gap: 12px; align-items: center; padding: 12px 18px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.board-row:last-child { border-bottom: 0; }
+.board-row.head { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); background: var(--surface-2); }
+.board-row.me { background: var(--accent-soft); }
+.board-row .pos { font-family: var(--f-display); font-weight: 700; font-size: 18px; }
+.board-row .name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.board-row .rk { font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
+.board-row .sc { text-align: right; font-family: var(--f-display); font-weight: 600; }
+.ranks { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; margin-top: 24px; }
+.rank-tile { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: var(--surface); }
+.rank-tile.cur { border-color: var(--accent); }
+.rank-tile b { font-family: var(--f-display); display: block; }
+.rank-tile span { font-size: 12px; color: var(--muted); font-family: var(--f-mono); }
+
+.toast { position: fixed; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 8px; font-weight: 600; transform: translateY(20px); opacity: 0; transition: .25s; pointer-events: none; z-index: 20; }
+.toast.show { transform: none; opacity: 1; }
+.reset { margin-top: 28px; font-size: 13px; color: var(--muted); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+footer { border-top: 1px solid var(--line); padding-block: 20px; font-size: 13px; color: var(--muted); }
+
+@media (max-width: 900px) {
+  .hero, .room-grid { grid-template-columns: minmax(0, 1fr); }
+  .lab { position: static; }
+  .rules { grid-template-columns: 1fr; }
+  .stats { margin-left: 0; }
+}
+@media (max-width: 520px) {
+  .board-row { grid-template-columns: 34px minmax(0, 1fr) 70px; }
+  .board-row .rk { display: none; }
+  .term { height: 340px; }
+}
+</style>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="logo" href="#home"><span class="logo-mark">&gt;_</span>Shellcamp</a>
+    <nav class="main" aria-label="Main">
+      <a href="#home" data-nav="home">Home</a>
+      <a href="#paths" data-nav="paths">Learning paths</a>
+      <a href="#leaderboard" data-nav="leaderboard">Leaderboard</a>
+    </nav>
+    <div class="stats">
+      <div class="stat"><b id="s-points">0</b><span>Points</span></div>
+      <div class="stat"><b id="s-streak">0</b><span>Day streak</span></div>
+      <div class="stat"><b id="s-rooms">0</b><span>Rooms done</span></div>
+      <span class="rank-chip" id="s-rank">Script Newbie</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" id="app"></main>
+
+<footer>
+  <div class="wrap">Shellcamp is a practice platform. Every lab here is simulated in your browser. Only test systems you own or have written permission to test.</div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ============================== CONTENT ============================== */
+const PATHS = [
+  { id: 'start', name: 'Start Here: Absolute Basics', blurb: 'No experience needed. How a computer works, how it counts, what ethical hacking is, and how to protect yourself first.', rooms: ['how-computers-work', 'binary-hex', 'hello-ethics', 'stay-safe-online'] },
+  { id: 'foundations', name: 'Foundations', blurb: 'The skills every hacker uses daily. Survive in a Linux shell, understand permissions, and learn how networks and the web carry data.', rooms: ['first-shell', 'linux-permissions', 'networking-101', 'web-101'] },
+  { id: 'crypto', name: 'Crypto Basics', blurb: 'Encoding, encryption and hashing are not the same thing. Learn the difference and use hashes to check that files are genuine.', rooms: ['encoding-vs-encryption', 'hashing-basics'] },
+  { id: 'offense', name: 'Offensive Basics', blurb: 'Think like an attacker. Scan a target, find hidden pages, and break web apps that trust their input.', rooms: ['nmap-recon', 'dir-discovery', 'login-bypass', 'xss-basics'] },
+  { id: 'defense', name: 'Defensive Basics', blurb: 'Think like a defender. Learn the layers that keep systems safe, then investigate a real-looking break-in.', rooms: ['defense-in-depth', 'log-hunt'] }
+];
+const ORDER = PATHS.flatMap(p => p.rooms);
+
+const ROOMS = {
+  'hello-ethics': {
+    title: 'Hello, Ethics', diff: 'easy', mins: 15, lab: null,
+    summary: 'What ethical hacking is, the CIA triad, and the one rule you never break.',
+    tasks: [
+      { title: 'What is ethical hacking?', body: `
+<p>Ethical hacking means finding security weaknesses <strong>with permission</strong>, so they can be fixed before criminals find them. The techniques are the same ones attackers use. Permission and intent are the difference.</p>
+<ul><li><strong>White hat</strong>: hacks with permission. This is you.</li><li><strong>Black hat</strong>: hacks without permission, for harm or profit.</li><li><strong>Grey hat</strong>: hacks without permission but "means well". Still illegal.</li></ul>
+<p class="callout">In a real job, a tester works under a signed <strong>scope</strong> document. It lists exactly which systems may be tested, when, and how. Anything outside scope is off limits.</p>`,
+        questions: [
+          { id: 'he1', q: 'What colour hat describes a hacker who works with permission?', a: ['white', 'white hat'], hint: 'The opposite of black.', pts: 10 },
+          { id: 'he2', q: 'What is the document called that lists which systems you are allowed to test?', a: ['scope', 'the scope', 'scope document'], hint: 'One word, five letters, starts with S.', pts: 10 }
+        ] },
+      { title: 'The CIA triad', body: `
+<p>Every security problem threatens at least one of three properties:</p>
+<div class="tbl-wrap"><table><tr><th>Property</th><th>Meaning</th><th>Example attack</th></tr>
+<tr><td>Confidentiality</td><td>Only the right people can read the data</td><td>A database leak</td></tr>
+<tr><td>Integrity</td><td>Data is not changed without permission</td><td>Editing a bank balance</td></tr>
+<tr><td>Availability</td><td>The system works when people need it</td><td>A DDoS that floods a website</td></tr></table></div>`,
+        questions: [
+          { id: 'he3', q: 'A DDoS attack knocks a website offline. Which part of the CIA triad does it hit?', a: ['availability'], hint: 'Can people still use it?', pts: 10 },
+          { id: 'he4', q: 'An attacker secretly changes exam marks in a school database. Which property is broken?', a: ['integrity'], hint: 'The data was modified.', pts: 10 }
+        ] },
+      { title: 'The five phases of a pentest', body: `
+<p>A penetration test follows a repeatable process:</p>
+<ul><li><strong>Reconnaissance</strong>: gather public information about the target.</li><li><strong>Scanning</strong>: find live hosts, open ports and services.</li><li><strong>Gaining access</strong>: exploit a weakness.</li><li><strong>Maintaining access</strong>: escalate from a normal user to admin.</li><li><strong>Reporting</strong>: explain what you found and how to fix it.</li></ul>
+<p>The report is what the client pays for. A hack nobody can understand or fix helps no one.</p>`,
+        questions: [
+          { id: 'he5', q: 'What is the first phase of a penetration test?', a: ['reconnaissance', 'recon'], hint: 'Gathering information. Often shortened to "recon".', pts: 10 },
+          { id: 'he6', q: 'Which phase produces the document the client actually pays for?', a: ['reporting', 'report', 'the report'], hint: 'The last phase.', pts: 10 }
+        ] }
+    ]
+  },
+
+  'first-shell': {
+    title: 'Your First Shell', diff: 'easy', mins: 25, lab: 'linux',
+    summary: 'Move around a Linux machine, read files, and find flags hidden where beginners never look.',
+    tasks: [
+      { title: 'Who and where am I?', body: `
+<p>The lab machine on the right is a simulated Linux box. Click inside it and type commands, then press <kbd>Enter</kbd>.</p>
+<ul><li><code>whoami</code> prints your username.</li><li><code>pwd</code> prints your current directory ("print working directory").</li><li><code>ls</code> lists the files in a directory.</li></ul>
+<p>Type <code>help</code> at any time to see every command the lab understands.</p>`,
+        questions: [
+          { id: 'fs1', q: 'What username are you logged in as?', a: ['student'], hint: 'Run whoami.', pts: 10 },
+          { id: 'fs2', q: 'What is the full path of your starting directory?', a: ['/home/student', '/home/student/'], hint: 'Run pwd.', pts: 10 }
+        ] },
+      { title: 'Reading files', body: `
+<p><code>cat</code> prints a file's contents. Run <code>ls</code>, pick a file and read it with <code>cat notes.txt</code>.</p>
+<p>Flags in Shellcamp look like <code>SC{something}</code>. Copy the whole thing, braces included.</p>`,
+        questions: [
+          { id: 'fs3', q: 'What flag is inside notes.txt?', a: ['SC{first_steps_in_the_shell}'], hint: 'cat notes.txt', pts: 20, flag: true }
+        ] },
+      { title: 'Hidden files and folders', body: `
+<p>On Linux, any file whose name starts with a dot is hidden. Plain <code>ls</code> skips them. <code>ls -a</code> shows everything.</p>
+<p>Use <code>cd foldername</code> to move into a folder and <code>cd ..</code> to go back up one level.</p>`,
+        questions: [
+          { id: 'fs4', q: 'What is the flag in the hidden file in your home directory?', a: ['SC{dots_hide_things}'], hint: 'ls -a, then cat the file that starts with a dot.', pts: 25, flag: true },
+          { id: 'fs5', q: 'There is a flag somewhere inside the projects folder. What is it?', a: ['SC{look_deeper}'], hint: 'cd projects, then ls -a. Check for more folders.', pts: 30, flag: true }
+        ] },
+      { title: 'Users on the system', body: `
+<p>The file <code>/etc/passwd</code> lists every user account on a Linux system, one per line. The first field before the colon is the username.</p>
+<p>You can read files by their full path from anywhere: <code>cat /etc/passwd</code>.</p>`,
+        questions: [
+          { id: 'fs6', q: 'Besides root and student, which other human user has an account on this machine?', a: ['priya'], hint: 'Look for a line with /home/ in it.', pts: 20 }
+        ] }
+    ]
+  },
+
+  'networking-101': {
+    title: 'Networking 101', diff: 'easy', mins: 20, lab: null,
+    summary: 'IP addresses, ports, TCP vs UDP and DNS. The map you need before you can scan anything.',
+    tasks: [
+      { title: 'IP addresses', body: `
+<p>Every device on a network has an <strong>IP address</strong>, like a postal address for data. An IPv4 address is four numbers from 0 to 255, such as <code>192.168.1.10</code>. Each number is 8 bits, so the whole address is 32 bits.</p>
+<p><strong>Private</strong> ranges like <code>192.168.x.x</code> and <code>10.x.x.x</code> are used inside homes and offices. Your router translates them to one <strong>public</strong> IP on the internet.</p>`,
+        questions: [
+          { id: 'nw1', q: 'How many bits are in an IPv4 address?', a: ['32'], hint: '4 numbers × 8 bits.', pts: 10 },
+          { id: 'nw2', q: 'Is 192.168.0.5 a public or private address?', a: ['private'], hint: '192.168.x.x is used inside home networks.', pts: 10 }
+        ] },
+      { title: 'Ports and services', body: `
+<p>If an IP address is a building, <strong>ports</strong> are the doors. One machine can run many services, each listening on its own port number (0 to 65535).</p>
+<div class="tbl-wrap"><table><tr><th>Port</th><th>Service</th><th>Used for</th></tr>
+<tr><td>21</td><td>FTP</td><td>File transfer</td></tr><tr><td>22</td><td>SSH</td><td>Secure remote shell</td></tr>
+<tr><td>53</td><td>DNS</td><td>Name lookups</td></tr><tr><td>80</td><td>HTTP</td><td>Websites</td></tr>
+<tr><td>443</td><td>HTTPS</td><td>Encrypted websites</td></tr><tr><td>3306</td><td>MySQL</td><td>Databases</td></tr></table></div>`,
+        questions: [
+          { id: 'nw3', q: 'Which port does HTTPS use by default?', a: ['443'], hint: 'Check the table.', pts: 10 },
+          { id: 'nw4', q: 'Which service usually runs on port 22?', a: ['ssh'], hint: 'Secure remote shell.', pts: 10 }
+        ] },
+      { title: 'TCP vs UDP', body: `
+<p><strong>TCP</strong> is reliable. It opens a connection with a <strong>three-way handshake</strong> (SYN → SYN-ACK → ACK), numbers every packet and resends anything lost. Web pages and SSH use TCP.</p>
+<p><strong>UDP</strong> just fires packets and hopes. It is faster with less overhead, so it suits video calls, games and most DNS lookups.</p>`,
+        questions: [
+          { id: 'nw5', q: 'Which protocol uses a three-way handshake?', a: ['tcp'], hint: 'The reliable one.', pts: 10 },
+          { id: 'nw6', q: 'What is the first packet of the handshake called?', a: ['syn'], hint: 'Short for "synchronize".', pts: 15 }
+        ] },
+      { title: 'DNS', body: `
+<p>Humans remember names like <code>example.com</code>, computers need IP addresses. <strong>DNS</strong> (Domain Name System) translates one to the other. It is the internet's phone book.</p>
+<p>An <strong>A record</strong> maps a name to an IPv4 address. An <strong>MX record</strong> says which server handles a domain's email.</p>`,
+        questions: [
+          { id: 'nw7', q: 'Which DNS record type maps a domain name to an IPv4 address?', a: ['a', 'a record'], hint: 'A single letter.', pts: 10 },
+          { id: 'nw8', q: 'Which DNS record type points to a domain\'s mail server?', a: ['mx', 'mx record'], hint: 'Mail eXchange.', pts: 10 }
+        ] }
+    ]
+  },
+
+  'web-101': {
+    title: 'How the Web Works', diff: 'easy', mins: 20, lab: null,
+    summary: 'Requests, responses, status codes and cookies. Everything web hacking builds on.',
+    tasks: [
+      { title: 'Requests and responses', body: `
+<p>Your browser sends an <strong>HTTP request</strong>; the server replies with a <strong>response</strong>. A request has a <strong>method</strong>:</p>
+<ul><li><code>GET</code> asks for a page or resource.</li><li><code>POST</code> sends data, such as a login form.</li><li><code>PUT</code> / <code>DELETE</code> update or remove resources in APIs.</li></ul>
+<pre>POST /login HTTP/1.1
+Host: shop.example
+Content-Type: application/x-www-form-urlencoded
+
+username=priya&amp;password=hunter2</pre>`,
+        questions: [
+          { id: 'wb1', q: 'Which HTTP method is normally used to submit a login form?', a: ['post'], hint: 'It sends data to the server.', pts: 10 }
+        ] },
+      { title: 'Status codes', body: `
+<div class="tbl-wrap"><table><tr><th>Range</th><th>Meaning</th><th>Common example</th></tr>
+<tr><td>2xx</td><td>Success</td><td>200 OK</td></tr><tr><td>3xx</td><td>Redirect</td><td>301 Moved Permanently</td></tr>
+<tr><td>4xx</td><td>Client error</td><td>403 Forbidden, 404 Not Found</td></tr><tr><td>5xx</td><td>Server error</td><td>500 Internal Server Error</td></tr></table></div>
+<p>Hackers watch status codes closely. A <code>403</code> means something exists but is protected. A <code>500</code> often means your input broke the server, which hints at a bug.</p>`,
+        questions: [
+          { id: 'wb2', q: 'Which status code means the page was not found?', a: ['404'], hint: 'The most famous error page.', pts: 10 },
+          { id: 'wb3', q: 'Which status code means "you are not allowed to see this"?', a: ['403'], hint: 'Forbidden.', pts: 10 }
+        ] },
+      { title: 'Cookies and sessions', body: `
+<p>HTTP forgets you between requests. After you log in, the server gives your browser a <strong>session cookie</strong>, a long random token. The browser sends it with every request so the server knows it is still you.</p>
+<p class="callout">Anyone who steals your session cookie can act as you without knowing your password. That is why attacks like XSS try to read cookies, and why sites mark them <code>HttpOnly</code> so scripts cannot read them.</p>`,
+        questions: [
+          { id: 'wb4', q: 'Which cookie flag stops JavaScript from reading a cookie?', a: ['httponly', 'http only', 'http-only'], hint: 'Mentioned in the yellow box.', pts: 15 }
+        ] }
+    ]
+  },
+
+  'nmap-recon': {
+    title: 'Recon with Nmap', diff: 'easy', mins: 30, lab: 'recon',
+    summary: 'Scan a lab target, identify its services and versions, and follow the clues it leaves on its website.',
+    tasks: [
+      { title: 'Is the target alive?', body: `
+<p>Your target for this room is <code>10.10.14.7</code>. It is a simulated machine that exists only inside this lab.</p>
+<p>Start by checking it responds: <code>ping 10.10.14.7</code>.</p>
+<p class="callout">Never run scans against IP addresses you do not own or have permission to test. Scanning is the first step of an attack, and network owners treat it that way.</p>`,
+        questions: [
+          { id: 'nm1', q: 'What is the TTL value in the ping replies?', a: ['64'], hint: 'Look for ttl= in the output. 64 usually means a Linux machine.', pts: 10 }
+        ] },
+      { title: 'Port scanning', body: `
+<p><strong>Nmap</strong> is the standard port scanner. A basic scan:</p>
+<pre>nmap 10.10.14.7</pre>
+<p>Add <code>-sV</code> to detect the software version behind each port. Versions matter: an old version may have a known vulnerability (a <strong>CVE</strong>).</p>
+<pre>nmap -sV 10.10.14.7</pre>`,
+        questions: [
+          { id: 'nm2', q: 'How many open ports does the target have?', a: ['3', 'three'], hint: 'Count the lines that say open.', pts: 10 },
+          { id: 'nm3', q: 'Which port is the web server on?', a: ['80'], hint: 'The http service.', pts: 10 },
+          { id: 'nm4', q: 'Which version of vsftpd is running on the FTP port?', a: ['3.0.3', 'vsftpd 3.0.3'], hint: 'Run nmap -sV.', pts: 15 }
+        ] },
+      { title: 'Reading the website', body: `
+<p>Port 80 is open, so there is a website. Fetch it from the terminal with <code>curl http://10.10.14.7/</code>.</p>
+<p>Many sites have a <code>robots.txt</code> file that tells search engines which pages not to index. Developers sometimes list secret pages there, which tells attackers exactly where to look.</p>`,
+        questions: [
+          { id: 'nm5', q: 'Which hidden path is listed in robots.txt?', a: ['/dev-notes', 'dev-notes', '/dev-notes/'], hint: 'curl http://10.10.14.7/robots.txt', pts: 15 },
+          { id: 'nm6', q: 'What flag is on that hidden page?', a: ['SC{robots_tell_secrets}'], hint: 'curl the path you just found.', pts: 30, flag: true }
+        ] }
+    ]
+  },
+
+  'login-bypass': {
+    title: 'Login Bypass: SQL Injection', diff: 'medium', mins: 25, lab: 'web',
+    summary: 'See how a login form that pastes your input straight into a SQL query can be tricked into letting you in.',
+    tasks: [
+      { title: 'How the login works', body: `
+<p>The practice app on the right checks logins with this SQL query. It inserts whatever you type directly into the query text:</p>
+<pre>SELECT * FROM users
+WHERE username = '<span>INPUT</span>' AND password = '<span>INPUT</span>'</pre>
+<p>If the query returns a row, you are logged in. Try a normal login first, for example <code>priya</code> / <code>guess</code>, and watch the query box update as you type.</p>`,
+        questions: [
+          { id: 'sq1', q: 'Which SQL keyword in the query filters rows by a condition?', a: ['where'], hint: 'It comes right after FROM users.', pts: 10 }
+        ] },
+      { title: 'Breaking out of the quotes', body: `
+<p>Your input sits between two single quotes. If you type a quote yourself, you close the string early, and everything after it is treated as <strong>SQL code</strong> instead of data.</p>
+<p>In SQL, <code>--</code> starts a comment: everything after it is ignored. So a username of <code>admin'--</code> turns the query into:</p>
+<pre>SELECT * FROM users WHERE username = 'admin'-- ' AND password = '...'</pre>
+<p>The password check is now commented out. Try it in the practice app, then also try the classic <code>' OR '1'='1</code> in the password field.</p>`,
+        questions: [
+          { id: 'sq2', q: 'What flag do you get after logging in as admin without the password?', a: ['SC{never_trust_user_input}'], hint: "Username: admin'--   Password: anything", pts: 35, flag: true },
+          { id: 'sq3', q: 'Which two characters start a SQL comment in this example?', a: ['--'], hint: 'Two of the same symbol.', pts: 10 }
+        ] },
+      { title: 'How developers fix it', body: `
+<p>The fix is <strong>parameterized queries</strong> (also called prepared statements). The query and the data travel separately, so input can never become code:</p>
+<pre># Vulnerable
+query = "SELECT * FROM users WHERE username = '" + user + "'"
+
+# Safe
+cursor.execute("SELECT * FROM users WHERE username = %s", (user,))</pre>
+<p>Injection has been in the OWASP Top 10 list of web risks for over 20 years. It is still found in real apps every year.</p>`,
+        questions: [
+          { id: 'sq4', q: 'What is the main fix for SQL injection called? (two words)', a: ['parameterized queries', 'parameterised queries', 'prepared statements', 'parameterized query', 'prepared statement'], hint: 'Query and data are sent separately.', pts: 15 }
+        ] }
+    ]
+  },
+
+  'log-hunt': {
+    title: 'Log Hunt', diff: 'medium', mins: 25, lab: 'logs',
+    summary: 'A server was broken into overnight. Read its login logs and work out who did it and how.',
+    tasks: [
+      { title: 'The incident', body: `
+<p>You are a security analyst. The server <code>web-02</code> sent an alert at 03:14. You have a shell on it as <code>analyst</code>.</p>
+<p>Linux records every SSH login attempt in <code>/var/log/auth.log</code>. Start by reading it: <code>cat /var/log/auth.log</code>.</p>`,
+        questions: [
+          { id: 'lg1', q: 'Which IP address keeps failing to log in?', a: ['203.0.113.45'], hint: 'Look at the "Failed password" lines.', pts: 15 }
+        ] },
+      { title: 'Filtering with grep', body: `
+<p>Real logs have thousands of lines. <code>grep</code> shows only the lines that match a pattern:</p>
+<pre>grep "Failed password" /var/log/auth.log</pre>
+<p>Add <code>-c</code> to count the matches instead of printing them. You can also chain commands with a pipe <code>|</code>:</p>
+<pre>grep "Failed" /var/log/auth.log | grep 203.0.113.45 | wc -l</pre>`,
+        questions: [
+          { id: 'lg2', q: 'How many failed login attempts came from the attacker\'s IP?', a: ['8', 'eight'], hint: 'grep -c "203.0.113.45" won\'t work alone, because the attacker also logged in successfully. Filter for Failed first.', pts: 20 },
+          { id: 'lg3', q: 'Which usernames did the attacker try? Give the one they tried most.', a: ['admin'], hint: 'grep Failed /var/log/auth.log', pts: 15 }
+        ] },
+      { title: 'What got in?', body: `
+<p>A brute-force attack only matters if it worked. Successful logins say <code>Accepted password</code>.</p>
+<p>When you know which account was compromised, check its home directory for anything the attacker left behind.</p>`,
+        questions: [
+          { id: 'lg4', q: 'Which account did the attacker successfully log in to?', a: ['backup'], hint: 'grep Accepted /var/log/auth.log', pts: 20 },
+          { id: 'lg5', q: 'The attacker left a note in that account\'s home directory. What is the flag?', a: ['SC{weak_passwords_get_guessed}'], hint: 'ls -a /home/backup', pts: 30, flag: true }
+        ] }
+    ]
+  },
+
+  /* ---------- START HERE ---------- */
+  'how-computers-work': {
+    title: 'How Computers Work', diff: 'easy', mins: 15, lab: null,
+    summary: 'Before you can hack a computer, you need to know what is inside one and what each part does.',
+    tasks: [
+      { title: 'The main parts', body: `
+<p>Every computer, from a phone to a server, has the same core parts:</p>
+<div class="tbl-wrap"><table><tr><th>Part</th><th>What it does</th><th>Everyday comparison</th></tr>
+<tr><td>CPU (processor)</td><td>Runs instructions, billions per second</td><td>The chef doing the cooking</td></tr>
+<tr><td>RAM (memory)</td><td>Holds what is being worked on right now. Wiped when power is off</td><td>The kitchen counter</td></tr>
+<tr><td>Storage (SSD / hard drive)</td><td>Keeps files permanently, even when off</td><td>The fridge and cupboards</td></tr>
+<tr><td>Network card</td><td>Sends and receives data to other computers</td><td>The front door for deliveries</td></tr></table></div>
+<p>Security matters for each one. Passwords can sit in RAM while you type them. Stolen laptops leak whatever is in storage unless it is encrypted. The network card is how most attacks arrive.</p>`,
+        questions: [
+          { id: 'cw1', q: 'Which part runs the instructions of a program?', a: ['cpu', 'processor', 'the cpu'], hint: 'Three letters. Central Processing Unit.', pts: 5 },
+          { id: 'cw2', q: 'Which part is wiped when the power turns off: RAM or storage?', a: ['ram', 'memory'], hint: 'The kitchen counter, not the fridge.', pts: 5 }
+        ] },
+      { title: 'The operating system', body: `
+<p>The <strong>operating system</strong> (OS) is the main program that manages the hardware and runs every other program. Common ones are <strong>Windows</strong>, <strong>macOS</strong>, <strong>Linux</strong>, <strong>Android</strong> and <strong>iOS</strong>.</p>
+<p>The core of an OS is the <strong>kernel</strong>. It decides which program gets the CPU, which memory, and which files it may touch.</p>
+<p>Most of the internet's servers run <strong>Linux</strong>, and so do most hacking tools. That is why you will learn the Linux command line soon.</p>`,
+        questions: [
+          { id: 'cw3', q: 'What is the core part of an operating system called?', a: ['kernel', 'the kernel'], hint: 'Like the core of a seed or nut.', pts: 5 },
+          { id: 'cw4', q: 'Which operating system runs most web servers?', a: ['linux'], hint: 'The penguin.', pts: 5 }
+        ] },
+      { title: 'Programs and processes', body: `
+<p>A <strong>program</strong> is a file of instructions sitting in storage. When you open it, the OS loads it into RAM and it becomes a running <strong>process</strong>.</p>
+<p>Every process runs as some <strong>user</strong>, and it can only do what that user is allowed to do. A big goal in hacking is <strong>privilege escalation</strong>: going from a normal user to the all-powerful admin account (called <code>root</code> on Linux and <code>Administrator</code> or <code>SYSTEM</code> on Windows).</p>`,
+        questions: [
+          { id: 'cw5', q: 'What is a running program called?', a: ['process', 'a process'], hint: 'Starts with P.', pts: 5 },
+          { id: 'cw6', q: 'What is the name of the all-powerful admin user on Linux?', a: ['root'], hint: 'Like the root of a tree.', pts: 5 }
+        ] }
+    ]
+  },
+
+  'binary-hex': {
+    title: 'Binary and Hex', diff: 'easy', mins: 20, lab: null,
+    summary: 'Computers count in 1s and 0s. Learn to read binary and hexadecimal, which you will see everywhere in hacking.',
+    tasks: [
+      { title: 'Bits and bytes', body: `
+<p>A computer stores everything as electrical on/off signals, written as <code>1</code> and <code>0</code>. One of these is a <strong>bit</strong>. Eight bits make a <strong>byte</strong>.</p>
+<ul><li>1 byte can hold one letter, like <code>A</code>.</li><li>1 kilobyte (KB) is about 1,000 bytes. 1 megabyte (MB) is about a million.</li></ul>`,
+        questions: [
+          { id: 'bh1', q: 'How many bits are in one byte?', a: ['8', 'eight'], hint: 'Same as legs on a spider.', pts: 5 }
+        ] },
+      { title: 'Counting in binary', body: `
+<p>In normal (decimal) numbers each place is worth 10× the one to its right: 1, 10, 100. In binary each place is worth <strong>2×</strong>:</p>
+<div class="tbl-wrap"><table><tr><th>128</th><th>64</th><th>32</th><th>16</th><th>8</th><th>4</th><th>2</th><th>1</th></tr>
+<tr><td>0</td><td>0</td><td>0</td><td>0</td><td>1</td><td>0</td><td>1</td><td>0</td></tr></table></div>
+<p>To read it, add up the places that have a 1. Above: 8 + 2 = <strong>10</strong>. So <code>00001010</code> in binary is 10 in decimal.</p>
+<p>All eight bits set to 1 (<code>11111111</code>) gives 128+64+32+16+8+4+2+1 = <strong>255</strong>. That is why each number in an IP address stops at 255.</p>`,
+        questions: [
+          { id: 'bh2', q: 'What is binary 0101 in decimal?', a: ['5', 'five'], hint: 'Places are 8, 4, 2, 1. Add the ones with a 1.', pts: 10 },
+          { id: 'bh3', q: 'What is binary 1100 in decimal?', a: ['12', 'twelve'], hint: '8 + 4.', pts: 10 },
+          { id: 'bh4', q: 'Write the number 7 in 4-bit binary.', a: ['0111', '111'], hint: '4 + 2 + 1.', pts: 10 }
+        ] },
+      { title: 'Hexadecimal', body: `
+<p>Binary gets long fast, so people use <strong>hexadecimal</strong> (hex, base 16). It uses 0–9 and then A–F for 10–15:</p>
+<pre>A = 10   B = 11   C = 12   D = 13   E = 14   F = 15</pre>
+<p>One hex digit equals exactly 4 bits, so one byte is always two hex digits: <code>FF</code> = 255, <code>0A</code> = 10. Hex is often written with <code>0x</code> in front, like <code>0x41</code>.</p>
+<p>You will see hex in password hashes, memory addresses, MAC addresses and website colours like <code>#FF0000</code> (pure red).</p>`,
+        questions: [
+          { id: 'bh5', q: 'What decimal number is the hex digit C?', a: ['12', 'twelve'], hint: 'A=10, B=11...', pts: 10 },
+          { id: 'bh6', q: 'What is hex FF in decimal?', a: ['255'], hint: 'The largest number one byte can hold.', pts: 10 }
+        ] }
+    ]
+  },
+
+  'stay-safe-online': {
+    title: 'Protect Yourself First', diff: 'easy', mins: 20, lab: null,
+    summary: 'Strong passwords, two-factor authentication and spotting phishing. Secure your own accounts before you test anyone else\'s.',
+    tasks: [
+      { title: 'Strong passwords', body: `
+<p>Attackers do not guess passwords one by one. They use lists of millions of leaked passwords and try them all in seconds. So the best passwords are:</p>
+<ul><li><strong>Long</strong>: length beats complexity. <code>correct-horse-battery-staple</code> is far stronger than <code>P@ss1</code>.</li><li><strong>Unique</strong>: never reused. When one site leaks, attackers try that password everywhere else. This is called <strong>credential stuffing</strong>.</li><li><strong>Stored in a password manager</strong>, so you only remember one strong master password.</li></ul>`,
+        questions: [
+          { id: 'ss1', q: 'Trying leaked passwords from one site on many other sites is called credential ______.', a: ['stuffing'], hint: 'Like stuffing a turkey.', pts: 10 },
+          { id: 'ss2', q: 'Which matters more for password strength: length or using symbols?', a: ['length'], hint: 'Read the first bullet.', pts: 5 }
+        ] },
+      { title: 'Two-factor authentication', body: `
+<p><strong>Two-factor authentication</strong> (2FA, or MFA) asks for something extra after your password. The three kinds of factor are:</p>
+<ul><li>Something you <strong>know</strong>: a password or PIN.</li><li>Something you <strong>have</strong>: your phone, an authenticator app, a security key.</li><li>Something you <strong>are</strong>: fingerprint or face.</li></ul>
+<p>With 2FA on, a stolen password alone is not enough. Turn it on for your email first, because email resets every other account.</p>`,
+        questions: [
+          { id: 'ss3', q: 'A fingerprint is "something you ___".', a: ['are'], hint: 'Know, have, or...', pts: 5 },
+          { id: 'ss4', q: 'Which account should you protect with 2FA first?', a: ['email', 'e-mail', 'your email'], hint: 'It can reset all the others.', pts: 10 }
+        ] },
+      { title: 'Spotting phishing', body: `
+<p><strong>Phishing</strong> is a fake message that tricks you into clicking a link, typing a password or opening a file. It is the most common way real attacks begin. Read this example:</p>
+<pre>From:    PayPal Security &lt;alerts@paypa1-support.com&gt;
+Subject: URGENT: Your account will be closed in 24 hours
+
+We noticed unusual activity. Verify your identity now
+or your account will be permanently suspended:
+https://paypa1-support.com/verify</pre>
+<p>Warning signs: the sender's domain uses the number <strong>1</strong> instead of the letter <strong>l</strong>; it creates panic with a deadline; and the link goes to a domain that is not the real company. When in doubt, never click. Type the real website address yourself.</p>`,
+        questions: [
+          { id: 'ss5', q: 'What is the fake domain in the example email?', a: ['paypa1-support.com'], hint: 'Look after the @ sign.', pts: 10 },
+          { id: 'ss6', q: 'Phishing that creates panic with a deadline uses a sense of ______.', a: ['urgency'], hint: 'The subject line says URGENT.', pts: 10 }
+        ] }
+    ]
+  },
+
+  /* ---------- FOUNDATIONS ---------- */
+  'linux-permissions': {
+    title: 'Linux Permissions', diff: 'easy', mins: 25, lab: 'perms',
+    summary: 'Who can read, write and run each file. Misconfigured permissions are one of the most common ways attackers gain power.',
+    tasks: [
+      { title: 'Reading ls -l', body: `
+<p><code>ls -l</code> shows permissions for every file:</p>
+<pre>-rwxr-x--- 1 root  staff  220 Nov 20 report.sh
+│└┬┘└┬┘└┬┘   owner group
+│ │  │  └── others
+│ │  └───── group
+│ └──────── owner
+└────────── - = file, d = directory</pre>
+<p><code>r</code> = read, <code>w</code> = write, <code>x</code> = execute (run). A <code>-</code> means that permission is missing. Run <code>ls -l</code> in the lab.</p>`,
+        questions: [
+          { id: 'lp1', q: 'Which user owns secret.txt?', a: ['root'], hint: 'ls -l, third column.', pts: 10 },
+          { id: 'lp2', q: 'What letter means "execute" in a permission string?', a: ['x'], hint: 'r, w and...', pts: 5 }
+        ] },
+      { title: 'Permission denied', body: `
+<p>Try <code>cat secret.txt</code>. You are <code>student</code>, the file belongs to <code>root</code>, and "others" have no read permission, so the OS refuses.</p>
+<p>This is good security. If a file with passwords were readable by everyone, any user could steal them. Attackers always look for files that are readable or writable when they should not be.</p>`,
+        questions: [
+          { id: 'lp3', q: 'What error do you get when reading secret.txt?', a: ['permission denied'], hint: 'Two words.', pts: 10 },
+          { id: 'lp4', q: 'One config file in your home directory is readable by everyone but contains a password. What is the password?', a: ['Tutor2026!'], hint: 'Look for a .conf file and cat it.', pts: 20 }
+        ] },
+      { title: 'Making a script run', body: `
+<p>To run a program in the current folder you type <code>./name</code>. Try <code>./hello.sh</code>. It fails because the file has no <code>x</code> permission.</p>
+<p>The owner of a file can change its permissions with <code>chmod</code>. Give it execute permission, then run it:</p>
+<pre>chmod +x hello.sh
+./hello.sh</pre>
+<p>Permissions are also written as numbers: r=4, w=2, x=1, added up for owner, group and others. <code>rwxr-xr-x</code> is 7,5,5, written <strong>755</strong>.</p>`,
+        questions: [
+          { id: 'lp5', q: 'What flag does hello.sh print once it can run?', a: ['SC{chmod_plus_x}'], hint: 'chmod +x hello.sh then ./hello.sh', pts: 25, flag: true },
+          { id: 'lp6', q: 'What is rw-r--r-- as a number?', a: ['644'], hint: 'rw- = 4+2, r-- = 4.', pts: 15 }
+        ] }
+    ]
+  },
+
+  /* ---------- CRYPTO ---------- */
+  'encoding-vs-encryption': {
+    title: 'Encoding vs Encryption', diff: 'easy', mins: 20, lab: 'crypto',
+    summary: 'Base64 is not a secret. Learn which transformations actually protect data and which only change its shape.',
+    tasks: [
+      { title: 'Three different things', body: `
+<div class="tbl-wrap"><table><tr><th>Type</th><th>Purpose</th><th>Reversible?</th><th>Example</th></tr>
+<tr><td>Encoding</td><td>Change the format so data travels safely</td><td>Yes, by anyone</td><td>Base64</td></tr>
+<tr><td>Encryption</td><td>Keep data secret</td><td>Only with the key</td><td>AES</td></tr>
+<tr><td>Hashing</td><td>Make a fingerprint of data</td><td>No, one-way</td><td>SHA-256, MD5</td></tr></table></div>
+<p class="callout">A common beginner mistake, and a real bug in many apps, is "hiding" passwords with Base64. Anyone can decode it instantly.</p>`,
+        questions: [
+          { id: 'ev1', q: 'Which of the three needs a key to reverse?', a: ['encryption'], hint: 'The one meant to keep secrets.', pts: 10 },
+          { id: 'ev2', q: 'Which of the three is one-way and cannot be reversed?', a: ['hashing', 'hash', 'a hash'], hint: 'Fingerprints.', pts: 10 }
+        ] },
+      { title: 'Decode Base64', body: `
+<p>Base64 text uses letters, numbers, <code>+</code> and <code>/</code>, and often ends with <code>=</code> or <code>==</code>. That ending is a giveaway.</p>
+<p>In the lab, read <code>message.b64</code>, then decode it:</p>
+<pre>base64 -d message.b64</pre>`,
+        questions: [
+          { id: 'ev3', q: 'What flag is hidden in message.b64?', a: ['SC{base64_is_not_encryption}'], hint: 'base64 -d message.b64', pts: 20, flag: true }
+        ] },
+      { title: 'A classic cipher', body: `
+<p>The <strong>Caesar cipher</strong> shifts every letter a fixed number of places in the alphabet. ROT13 is a Caesar cipher with a shift of 13. Shift it again by 13 and you are back where you started.</p>
+<p>It was used by Julius Caesar over 2,000 years ago. Today it offers no protection at all, because there are only 25 possible shifts to try.</p>
+<p>Decode the intercepted note: <code>rot13 note.txt</code></p>`,
+        questions: [
+          { id: 'ev4', q: 'What flag is in the decoded note?', a: ['SC{caesar_was_here}'], hint: 'rot13 note.txt', pts: 20, flag: true },
+          { id: 'ev5', q: 'How many possible shifts does a Caesar cipher have (excluding a shift of 0)?', a: ['25'], hint: '26 letters, minus doing nothing.', pts: 10 }
+        ] }
+    ]
+  },
+
+  'hashing-basics': {
+    title: 'Hashes and Checksums', diff: 'easy', mins: 20, lab: 'crypto',
+    summary: 'A hash is a fingerprint for data. Use one to prove a download has not been tampered with.',
+    tasks: [
+      { title: 'What a hash is', body: `
+<p>A <strong>hash function</strong> turns any data, a word or a 4 GB file, into a short fixed-length fingerprint. Three properties make it useful:</p>
+<ul><li>The same input always gives the same hash.</li><li>Changing even one bit of the input gives a completely different hash.</li><li>You cannot turn a hash back into the original data.</li></ul>
+<p><strong>SHA-256</strong> is the modern standard and produces 64 hex characters. Older functions such as <strong>MD5</strong> and <strong>SHA-1</strong> are considered broken for security use.</p>`,
+        questions: [
+          { id: 'hb1', q: 'How many hex characters long is a SHA-256 hash?', a: ['64'], hint: 'Read the last paragraph.', pts: 10 },
+          { id: 'hb2', q: 'Can you turn a hash back into the original data? (yes/no)', a: ['no'], hint: 'Hashing is one-way.', pts: 5 }
+        ] },
+      { title: 'Checking a download', body: `
+<p>Software sites publish the SHA-256 hash of each download. After downloading, you hash the file yourself. If the hashes match, the file is exactly what the developer released. If not, it was corrupted or someone swapped it for malware.</p>
+<p>In the lab, compare the published hashes with the real ones:</p>
+<pre>cat checksums.txt
+sha256sum toolkit-v1.iso
+sha256sum toolkit-v2.iso</pre>`,
+        questions: [
+          { id: 'hb3', q: 'Which file does NOT match its published hash: toolkit-v1.iso or toolkit-v2.iso?', a: ['toolkit-v2.iso', 'v2', 'toolkit-v2'], hint: 'Compare the first few characters of each hash.', pts: 20 },
+          { id: 'hb4', q: 'Should you install a file whose hash does not match? (yes/no)', a: ['no'], hint: 'It may have been tampered with.', pts: 5 }
+        ] }
+    ]
+  },
+
+  /* ---------- OFFENSIVE ---------- */
+  'dir-discovery': {
+    title: 'Finding Hidden Pages', diff: 'easy', mins: 20, lab: 'dirscan',
+    summary: 'Websites often have pages nobody linked to. Use a directory scanner to find a forgotten backup folder.',
+    tasks: [
+      { title: 'Why hidden pages exist', body: `
+<p>Developers leave things on web servers by accident: old backups, test pages, admin panels. There are no links to them, but they are still reachable if you know the name.</p>
+<p>A <strong>directory scanner</strong> such as <strong>Gobuster</strong> tries a list of common names (<code>/admin</code>, <code>/backup</code>, <code>/test</code>...) and reports which ones exist, based on the status code.</p>
+<p>Your target for this room is <code>10.10.30.2</code>.</p>`,
+        questions: [
+          { id: 'dd1', q: 'What do we call the list of common names the scanner tries?', a: ['wordlist', 'a wordlist', 'word list'], hint: 'A list of words.', pts: 10 }
+        ] },
+      { title: 'Run the scan', body: `
+<pre>gobuster dir -u http://10.10.30.2 -w common.txt</pre>
+<p>Read the status codes in the results. Remember: <code>200</code> = found, <code>301</code> = redirect, <code>403</code> = exists but forbidden.</p>`,
+        questions: [
+          { id: 'dd2', q: 'Which directory returned 403 Forbidden?', a: ['/admin', 'admin'], hint: 'Look for Status: 403.', pts: 10 },
+          { id: 'dd3', q: 'Which directory looks like it holds old copies of the site?', a: ['/backup', 'backup', '/backup/'], hint: 'Status 200.', pts: 10 }
+        ] },
+      { title: 'Look inside', body: `
+<p>Open the folder you found with <code>curl http://10.10.30.2/backup/</code>. A <code>.bak</code> file is an old copy of a config file. Web servers often show <code>.bak</code> files as plain text, including any passwords inside.</p>
+<p class="callout">The fix: never leave backups in the web folder, and block access to file types like <code>.bak</code>, <code>.old</code> and <code>.zip</code>.</p>`,
+        questions: [
+          { id: 'dd4', q: 'What flag is inside the .bak file?', a: ['SC{backups_are_not_hidden}'], hint: 'curl the file listed in /backup/', pts: 30, flag: true }
+        ] }
+    ]
+  },
+
+  'xss-basics': {
+    title: 'Cross-Site Scripting', diff: 'medium', mins: 25, lab: 'web-xss',
+    summary: 'When a site prints your input as HTML, you can make it run code. Find the bug in a search page, then learn the fix.',
+    tasks: [
+      { title: 'What XSS is', body: `
+<p><strong>Cross-site scripting</strong> (XSS) happens when a website takes text from a user and puts it into a page <strong>as HTML</strong> without making it safe first. If the text contains a <code>&lt;script&gt;</code> tag, the browser runs it.</p>
+<p>The code then runs as part of the real website, so it could read that site's data for whoever views the page.</p>`,
+        questions: [
+          { id: 'xs1', q: 'What does XSS stand for?', a: ['cross-site scripting', 'cross site scripting'], hint: 'Read the first line.', pts: 10 }
+        ] },
+      { title: 'Test the search page', body: `
+<p>The practice app on the right has a search box. It shows "You searched for: ..." with your text. First search for a normal word like <code>maths</code> and look at the HTML box.</p>
+<p>Then check whether HTML gets through. Search for <code>&lt;b&gt;hello&lt;/b&gt;</code>. If the word appears bold, the page is not encoding your input. Finally, try a harmless test script:</p>
+<pre>&lt;script&gt;alert(1)&lt;/script&gt;</pre>
+<p>Security testers use <code>alert(1)</code> because it proves code ran without doing anything harmful.</p>`,
+        questions: [
+          { id: 'xs2', q: 'What flag appears when your test script runs?', a: ['SC{reflected_xss_found}'], hint: 'Search for the alert(1) script tag.', pts: 30, flag: true }
+        ] },
+      { title: 'The fix: output encoding', body: `
+<p>The fix is to <strong>encode</strong> special characters before putting user text into HTML. <code>&lt;</code> becomes <code>&amp;lt;</code> and <code>&gt;</code> becomes <code>&amp;gt;</code>, so the browser shows them as text instead of treating them as tags.</p>
+<p>Turn on <strong>Safe mode</strong> in the practice app and search again. The same input is now harmless. Modern frameworks like React encode by default, which is why XSS bugs often appear where developers bypass that.</p>`,
+        questions: [
+          { id: 'xs3', q: 'What does the < character become after HTML encoding?', a: ['&lt;', '&lt'], hint: 'Starts with an ampersand.', pts: 15 }
+        ] }
+    ]
+  },
+
+  /* ---------- DEFENSIVE ---------- */
+  'defense-in-depth': {
+    title: 'Defense in Depth', diff: 'easy', mins: 15, lab: null,
+    summary: 'No single control stops every attack. Learn the layers defenders stack so one failure does not mean total loss.',
+    tasks: [
+      { title: 'Layers of security', body: `
+<p>A castle had a moat, walls, guards and a locked keep. If one failed, the next still stood. <strong>Defense in depth</strong> applies this to computers:</p>
+<div class="tbl-wrap"><table><tr><th>Layer</th><th>Example</th></tr>
+<tr><td>Network</td><td>A firewall blocks ports that should not be open</td></tr>
+<tr><td>System</td><td>Software is patched, so known bugs are fixed</td></tr>
+<tr><td>Accounts</td><td>Strong passwords and 2FA</td></tr>
+<tr><td>Application</td><td>Input is validated and encoded</td></tr>
+<tr><td>Data</td><td>Encryption and tested backups</td></tr>
+<tr><td>People</td><td>Training to spot phishing</td></tr></table></div>`,
+        questions: [
+          { id: 'di1', q: 'Which tool blocks network ports that should not be open?', a: ['firewall', 'a firewall'], hint: 'First row.', pts: 5 },
+          { id: 'di2', q: 'Installing updates that fix known bugs is called ______.', a: ['patching', 'patch'], hint: 'Like patching a hole.', pts: 5 }
+        ] },
+      { title: 'Least privilege', body: `
+<p>The <strong>principle of least privilege</strong> says every user and program should have only the access it needs, and nothing more. An intern does not need the database admin password. A web server does not need to run as <code>root</code>.</p>
+<p>When an attacker breaks in through one account, least privilege limits how far they can get.</p>`,
+        questions: [
+          { id: 'di3', q: 'Giving users only the access they need is the principle of least ______.', a: ['privilege'], hint: 'Read the title.', pts: 10 }
+        ] },
+      { title: 'Backups and the 3-2-1 rule', body: `
+<p>Ransomware encrypts your files and demands payment. Good backups mean you can restore instead. The <strong>3-2-1 rule</strong>:</p>
+<ul><li><strong>3</strong> copies of your data,</li><li>on <strong>2</strong> different types of storage,</li><li>with <strong>1</strong> copy kept offsite or offline.</li></ul>
+<p>A backup you have never tested restoring is only a hope.</p>`,
+        questions: [
+          { id: 'di4', q: 'In the 3-2-1 rule, how many copies should be offsite or offline?', a: ['1', 'one'], hint: 'The last number.', pts: 10 },
+          { id: 'di5', q: 'Which type of malware encrypts files and demands payment?', a: ['ransomware'], hint: 'Ransom + software.', pts: 10 }
+        ] }
+    ]
+  }
+};
+
+/* ============================== STATE ============================== */
+const RANKS = [
+  { name: 'Script Newbie', min: 0 }, { name: 'Packet Sniffer', min: 150 }, { name: 'Port Prober', min: 400 },
+  { name: 'Shell Popper', min: 700 }, { name: 'Root Hunter', min: 850 }, { name: 'Zero-Day Sage', min: 1000 }
+];
+const KEY = 'shellcamp-progress-v1';
+let state = { solved: {}, points: 0, streak: 0, lastDay: null };
+try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.solved) state = s; } catch (e) {}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+
+const allQuestions = id => ROOMS[id].tasks.flatMap(t => t.questions);
+const roomProgress = id => { const qs = allQuestions(id); return { done: qs.filter(q => state.solved[q.id]).length, total: qs.length }; };
+const roomDone = id => { const p = roomProgress(id); return p.done === p.total; };
+const rankFor = pts => RANKS.filter(r => pts >= r.min).pop();
+const today = () => new Date().toISOString().slice(0, 10);
+
+function bumpStreak() {
+  const t = today();
+  if (state.lastDay === t) return;
+  const y = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
+  state.streak = state.lastDay === y ? state.streak + 1 : 1;
+  state.lastDay = t;
+}
+
+function renderStats() {
+  document.getElementById('s-points').textContent = state.points;
+  let streak = state.streak;
+  const y = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
+  if (state.lastDay !== today() && state.lastDay !== y) streak = 0;
+  document.getElementById('s-streak').textContent = streak;
+  document.getElementById('s-rooms').textContent = Object.keys(ROOMS).filter(roomDone).length;
+  document.getElementById('s-rank').textContent = rankFor(state.points).name;
+}
+
+let toastTimer;
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+/* ============================== VIEWS ============================== */
+const app = document.getElementById('app');
+
+function roomCard(id) {
+  const r = ROOMS[id], p = roomProgress(id);
+  const path = PATHS.find(x => x.rooms.includes(id)), step = path.rooms.indexOf(id) + 1;
+  return `<a class="room-card" href="#room-${id}">
+    <span class="eyebrow">Room ${step} of ${path.rooms.length}</span>
+    <h4>${esc(r.title)}</h4><p>${esc(r.summary)}</p>
+    <div class="room-meta"><span class="diff ${r.diff}">${r.diff === 'easy' ? 'Easy' : 'Medium'}</span><span>${r.mins} min</span>${r.lab ? '<span>· lab</span>' : ''}
+    ${p.done === p.total ? '<span class="done-tag">✓ Complete</span>' : `<span class="done-tag" style="color:var(--muted)">${p.done}/${p.total}</span>`}</div>
+    <div class="meter"><i style="width:${(p.done / p.total) * 100}%"></i></div></a>`;
+}
+
+function pathBlock(p) {
+  const qs = p.rooms.flatMap(allQuestions), done = qs.filter(q => state.solved[q.id]).length;
+  const pct = Math.round((done / qs.length) * 100);
+  return `<section class="path"><div class="path-top"><div><div class="eyebrow">Path · ${p.rooms.length} rooms</div><h3>${esc(p.name)}</h3><p>${esc(p.blurb)}</p></div>
+    <div class="path-progress">${pct}% complete<div class="meter"><i style="width:${pct}%"></i></div></div></div>
+    <div class="rooms">${p.rooms.map(roomCard).join('')}</div></section>`;
+}
+
+function nextRoom() {
+  for (const p of PATHS) for (const id of p.rooms) if (!roomDone(id)) return id;
+  return null;
+}
+
+function viewHome() {
+  const nxt = nextRoom();
+  app.innerHTML = `
+  <section class="hero">
+    <div>
+      <div class="eyebrow">Hands-on cyber security training</div>
+      <h1>Learn to break things. <em>Legally.</em></h1>
+      <p>Start from zero: how a computer works, then Linux, networks, the web, and finally real attack and defence skills. Short guided rooms, lab machines in your browser, and flags to capture along the way.</p>
+      <div class="hero-actions">
+        ${nxt ? `<a class="btn" href="#room-${nxt}">${Object.values(state.solved).length ? 'Continue' : 'Start'}: ${esc(ROOMS[nxt].title)} →</a>` : `<a class="btn" href="#leaderboard">All rooms complete. See your rank →</a>`}
+        <a class="btn ghost" href="#paths">Browse paths</a>
+      </div>
+    </div>
+    <div class="hero-term" aria-hidden="true"><span class="p">student@sc-lab:~$</span> nmap -sV 10.10.14.7
+<span class="d">Starting Nmap scan...</span>
+21/tcp open  ftp   vsftpd 3.0.3
+22/tcp open  ssh   OpenSSH 8.2p1
+80/tcp open  http  Apache 2.4.41
+<span class="p">student@sc-lab:~$</span> curl http://10.10.14.7/robots.txt
+Disallow: <span class="h">/dev-notes</span>
+<span class="p">student@sc-lab:~$</span> <span class="h">▌</span></div>
+  </section>
+  <section class="rules">
+    <div class="rule"><h3>Learn by doing</h3><p>Every room mixes a short lesson with questions you answer by actually running commands or testing an app.</p></div>
+    <div class="rule"><h3>Capture flags</h3><p>Flags look like <code>SC{...}</code>. They are hidden in files, web pages and logs. Finding one proves you did the work.</p></div>
+    <div class="rule"><h3>Stay legal</h3><p>All targets here are simulated. Outside Shellcamp, only test systems you own or have written permission to test.</p></div>
+  </section>
+  <div class="section-head"><h2>Learning paths</h2><a href="#paths">See all</a></div>
+  ${pathBlock(PATHS[0])}`;
+}
+
+function viewPaths() {
+  app.innerHTML = `<div class="section-head"><div><div class="eyebrow">${Object.keys(ROOMS).length} rooms · ${Object.values(ROOMS).reduce((n, r) => n + r.mins, 0)} minutes of content</div><h2 style="font-size:32px;margin-top:6px">Learning paths</h2></div></div>
+  ${PATHS.map(pathBlock).join('')}
+  <div class="reset"><span>Progress is saved in this browser only.</span><button class="linkbtn" id="reset-1">Reset my progress</button><span id="reset-confirm" hidden><button class="btn small" id="reset-yes">Yes, erase everything</button> <button class="linkbtn" id="reset-no">Cancel</button></span></div>`;
+  document.getElementById('reset-1').onclick = () => { document.getElementById('reset-confirm').hidden = false; };
+  document.getElementById('reset-no').onclick = () => { document.getElementById('reset-confirm').hidden = true; };
+  document.getElementById('reset-yes').onclick = () => { state = { solved: {}, points: 0, streak: 0, lastDay: null }; save(); renderStats(); viewPaths(); toast('Progress reset'); };
+}
+
+function viewLeaderboard() {
+  const sample = [
+    ['nullbyte_nina', 920], ['packetpanda', 805], ['r00tkid', 690], ['sudo_sam', 540],
+    ['hexagon', 410], ['curl_up', 300], ['bitflip', 185], ['ping_pong', 90]
+  ];
+  const rows = [...sample.map(([n, s]) => ({ n, s, me: false })), { n: 'You', s: state.points, me: true }].sort((a, b) => b.s - a.s || (a.me ? -1 : 1));
+  const cur = rankFor(state.points);
+  app.innerHTML = `<div class="section-head"><div><div class="eyebrow">This week</div><h2 style="font-size:32px;margin-top:6px">Leaderboard</h2></div><span class="eyebrow">Other players are example data</span></div>
+  <div class="board"><div class="board-row head"><span>#</span><span>Player</span><span class="rk">Rank</span><span style="text-align:right">Points</span></div>
+  ${rows.map((r, i) => `<div class="board-row${r.me ? ' me' : ''}"><span class="pos">${i + 1}</span><span class="name">${esc(r.n)}</span><span class="rk">${rankFor(r.s).name}</span><span class="sc">${r.s}</span></div>`).join('')}</div>
+  <div class="section-head" style="margin-top:32px"><h2>Ranks</h2></div>
+  <div class="ranks">${RANKS.map(r => `<div class="rank-tile${r === cur ? ' cur' : ''}"><b>${r.name}</b><span>${r.min}+ points</span></div>`).join('')}</div>`;
+}
+
+function viewRoom(id) {
+  const r = ROOMS[id];
+  if (!r) return viewHome();
+  const path = PATHS.find(p => p.rooms.includes(id));
+  const p = roomProgress(id);
+  const firstOpen = r.tasks.findIndex(t => t.questions.some(q => !state.solved[q.id]));
+  app.innerHTML = `
+  <div class="crumbs"><a href="#paths">Learning paths</a> / ${esc(path.name)}</div>
+  <div class="room-head"><div><div class="room-meta"><span class="diff ${r.diff}">${r.diff === 'easy' ? 'Easy' : 'Medium'}</span><span>${r.mins} min</span><span>${r.tasks.length} tasks</span></div>
+    <h1>${esc(r.title)}</h1><p>${esc(r.summary)}</p></div>
+    <div style="display:flex;flex-direction:column;gap:10px;align-items:flex-start"><div class="path-progress" id="room-prog">${p.done}/${p.total} answered<div class="meter"><i style="width:${(p.done / p.total) * 100}%"></i></div></div>
+    ${ORDER[ORDER.indexOf(id) + 1] ? `<a class="btn small" id="next-room" href="#room-${ORDER[ORDER.indexOf(id) + 1]}" hidden>Next room: ${esc(ROOMS[ORDER[ORDER.indexOf(id) + 1]].title)} →</a>` : ''}</div></div>
+  <div class="room-grid${r.lab ? '' : ' nolab'}">
+    <div class="tasks">${r.tasks.map((t, i) => taskHTML(t, i, i === (firstOpen === -1 ? 0 : firstOpen))).join('')}</div>
+    ${r.lab ? `<aside class="lab" id="lab"></aside>` : ''}
+  </div>`;
+  r.tasks.forEach(t => t.questions.forEach(q => wireQuestion(q, id)));
+  if (r.lab === 'web') mountWebLab(); else if (r.lab === 'web-xss') mountXssLab(); else if (r.lab) mountTerminal(r.lab);
+  const nb = document.getElementById('next-room');
+  if (nb) nb.hidden = !roomDone(id);
+}
+
+function taskHTML(t, i, open) {
+  const complete = t.questions.every(q => state.solved[q.id]);
+  return `<details class="task${complete ? ' complete' : ''}"${open ? ' open' : ''}>
+    <summary><span class="task-num">${complete ? '✓' : ''} Task ${i + 1}</span><h3>${esc(t.title)}</h3><span class="chev">›</span></summary>
+    <div class="task-body"><div class="lesson">${t.body}</div>
+    <div class="questions">${t.questions.map(q => {
+      const s = state.solved[q.id];
+      return `<div class="q${s ? ' solved' : ''}" id="q-${q.id}"><label for="in-${q.id}">${esc(q.q)}</label>
+      <div class="q-row"><input id="in-${q.id}" autocomplete="off" spellcheck="false" placeholder="${q.flag ? 'SC{...}' : 'Answer'}" ${s ? `value="${esc(q.a[0])}" disabled` : ''}>
+      <button class="btn small" id="b-${q.id}" ${s ? 'disabled' : ''}>${s ? '✓ Correct' : 'Submit'}</button></div>
+      <div class="q-foot"><span class="pts">${q.pts} pts</span>${s ? '' : `<button class="linkbtn" id="h-${q.id}">Show hint</button>`}</div>
+      <div class="hint" id="hint-${q.id}" hidden>${esc(q.hint)}</div></div>`;
+    }).join('')}</div></div></details>`;
+}
+
+const norm = s => s.trim().toLowerCase().replace(/\s+/g, ' ');
+
+function wireQuestion(q, roomId) {
+  if (state.solved[q.id]) return;
+  const input = document.getElementById('in-' + q.id), btn = document.getElementById('b-' + q.id);
+  const hintBtn = document.getElementById('h-' + q.id);
+  if (hintBtn) hintBtn.onclick = () => { const h = document.getElementById('hint-' + q.id); h.hidden = !h.hidden; hintBtn.textContent = h.hidden ? 'Show hint' : 'Hide hint'; };
+  const check = () => {
+    if (!input.value.trim()) return;
+    if (q.a.some(a => norm(a) === norm(input.value))) {
+      const wasDone = roomDone(roomId);
+      state.solved[q.id] = true; state.points += q.pts; bumpStreak(); save(); renderStats();
+      const box = document.getElementById('q-' + q.id);
+      box.classList.add('solved'); input.disabled = true; btn.disabled = true; btn.textContent = '✓ Correct';
+      if (hintBtn) hintBtn.remove();
+      const p = roomProgress(roomId);
+      document.getElementById('room-prog').innerHTML = `${p.done}/${p.total} answered<div class="meter"><i style="width:${(p.done / p.total) * 100}%"></i></div>`;
+      const task = box.closest('.task'), taskQs = [...task.querySelectorAll('.q')];
+      if (taskQs.every(el => el.classList.contains('solved'))) { task.classList.add('complete'); task.querySelector('.task-num').textContent = '✓ ' + task.querySelector('.task-num').textContent.replace('✓', '').trim(); }
+      if (!wasDone && roomDone(roomId)) { toast(`Room complete! +${q.pts} points`); const nb = document.getElementById('next-room'); if (nb) nb.hidden = false; }
+      else toast(q.flag ? `Flag captured! +${q.pts} points` : `Correct! +${q.pts} points`);
+    } else {
+      input.classList.remove('wrong'); void input.offsetWidth; input.classList.add('wrong');
+    }
+  };
+  btn.onclick = check;
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') check(); });
+}
+
+/* ============================== TERMINAL LABS ============================== */
+const LABS = {
+  linux: {
+    user: 'student', host: 'sc-lab', home: '/home/student', ip: '10.10.3.21', title: 'Linux practice box',
+    cheats: ['whoami', 'pwd', 'ls', 'ls -a', 'cat notes.txt', 'cd projects', 'cd ..', 'cat /etc/passwd'],
+    files: {
+      '/home/student/notes.txt': 'Welcome to your first shell!\n\nReading files with cat is the most common thing you will do.\nHere is your first flag: SC{first_steps_in_the_shell}\n',
+      '/home/student/.secret': 'Hidden files start with a dot. Nice find.\nSC{dots_hide_things}\n',
+      '/home/student/todo.txt': '- learn ls, cd, cat\n- read /etc/passwd\n- poke around the projects folder\n',
+      '/home/student/projects/readme.md': '# Projects\nNothing to see here... or is there?\n',
+      '/home/student/projects/.old/backup.txt': 'Old backup from last year.\nSC{look_deeper}\n',
+      '/etc/passwd': 'root:x:0:0:root:/root:/bin/bash\ndaemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin\nwww-data:x:33:33:www-data:/var/www:/usr/sbin/nologin\nsshd:x:110:65534::/run/sshd:/usr/sbin/nologin\nstudent:x:1000:1000:Student,,,:/home/student:/bin/bash\npriya:x:1001:1001:Priya,,,:/home/priya:/bin/bash\n',
+      '/etc/hostname': 'sc-lab\n',
+      '/home/priya/.keep': '',
+      '/var/log/syslog': 'Nov 25 09:00:01 sc-lab CRON[812]: (root) CMD (run-parts /etc/cron.hourly)\n'
+    }
+  },
+  recon: {
+    user: 'student', host: 'attackbox', home: '/home/student', ip: '10.10.1.5', title: 'AttackBox · target 10.10.14.7',
+    cheats: ['ping 10.10.14.7', 'nmap 10.10.14.7', 'nmap -sV 10.10.14.7', 'curl http://10.10.14.7/', 'curl http://10.10.14.7/robots.txt'],
+    files: { '/home/student/target.txt': 'Target: 10.10.14.7\nScope: this host only. Do not scan anything else.\n' }
+  },
+  logs: {
+    user: 'analyst', host: 'web-02', home: '/home/analyst', ip: '10.20.0.12', title: 'web-02 · incident response',
+    cheats: ['cat /var/log/auth.log', 'grep Failed /var/log/auth.log', 'grep -c Failed /var/log/auth.log', 'grep Accepted /var/log/auth.log', 'ls -a /home/backup'],
+    files: {
+      '/var/log/auth.log': [
+        'Nov 24 22:41:07 web-02 sshd[1201]: Accepted publickey for alice from 192.168.1.20 port 51122 ssh2',
+        'Nov 24 23:02:15 web-02 sshd[1208]: session closed for user alice',
+        'Nov 25 03:09:44 web-02 sshd[1342]: Failed password for admin from 203.0.113.45 port 40112 ssh2',
+        'Nov 25 03:09:47 web-02 sshd[1342]: Failed password for admin from 203.0.113.45 port 40112 ssh2',
+        'Nov 25 03:09:51 web-02 sshd[1344]: Failed password for admin from 203.0.113.45 port 40118 ssh2',
+        'Nov 25 03:10:02 web-02 sshd[1347]: Failed password for root from 203.0.113.45 port 40131 ssh2',
+        'Nov 25 03:10:09 web-02 sshd[1349]: Failed password for admin from 203.0.113.45 port 40140 ssh2',
+        'Nov 25 03:10:30 web-02 sshd[1352]: Failed password for root from 203.0.113.45 port 40155 ssh2',
+        'Nov 25 03:11:12 web-02 sshd[1356]: Failed password for test from 203.0.113.45 port 40170 ssh2',
+        'Nov 25 03:12:40 web-02 sshd[1360]: Failed password for alice from 192.168.1.20 port 51300 ssh2',
+        'Nov 25 03:13:58 web-02 sshd[1366]: Failed password for backup from 203.0.113.45 port 40201 ssh2',
+        'Nov 25 03:14:05 web-02 sshd[1368]: Accepted password for backup from 203.0.113.45 port 40209 ssh2',
+        'Nov 25 03:14:05 web-02 sshd[1368]: pam_unix(sshd:session): session opened for user backup',
+        'Nov 25 03:21:33 web-02 sshd[1368]: session closed for user backup'
+      ].join('\n') + '\n',
+      '/home/analyst/ticket.txt': 'ALERT 03:14 web-02: unusual login. Investigate /var/log/auth.log\n',
+      '/home/backup/.hello_admins.txt': 'Your backup account password was "backup123". Fix that.\nSC{weak_passwords_get_guessed}\n',
+      '/home/backup/backup.sh': '#!/bin/bash\ntar czf /tmp/site.tgz /var/www\n'
+    }
+  },
+  perms: {
+    user: 'student', host: 'sc-lab', home: '/home/student', ip: '10.10.3.22', title: 'Linux permissions box',
+    cheats: ['ls -l', 'ls -la', 'cat secret.txt', 'cat app.conf', './hello.sh', 'chmod +x hello.sh'],
+    files: {
+      '/home/student/secret.txt': 'SC{you_should_not_see_this}\n',
+      '/home/student/notes.txt': 'Permissions are r (read), w (write), x (execute).\n',
+      '/home/student/app.conf': '# tutoring portal database settings\ndb_host=localhost\ndb_user=portal\ndb_pass=Tutor2026!\n',
+      '/home/student/hello.sh': '#!/bin/bash\necho "Hello! Your script runs."\necho "SC{chmod_plus_x}"\n',
+      '/etc/shadow': 'root:$6$Kx...:19700:0:99999:7:::\n'
+    },
+    modes: {
+      '/home/student/secret.txt': { m: '-rw-r-----', o: 'root', g: 'root' },
+      '/home/student/notes.txt': { m: '-rw-r--r--', o: 'student', g: 'student' },
+      '/home/student/app.conf': { m: '-rw-r--r--', o: 'student', g: 'student' },
+      '/home/student/hello.sh': { m: '-rw-r--r--', o: 'student', g: 'student' },
+      '/etc/shadow': { m: '-rw-r-----', o: 'root', g: 'shadow' }
+    },
+    run: { '/home/student/hello.sh': 'Hello! Your script runs.\nSC{chmod_plus_x}' }
+  },
+  crypto: {
+    user: 'student', host: 'cipherbox', home: '/home/student', ip: '10.10.5.40', title: 'Crypto workbench',
+    cheats: ['ls', 'cat message.b64', 'base64 -d message.b64', 'rot13 note.txt', 'cat checksums.txt', 'sha256sum toolkit-v1.iso', 'sha256sum toolkit-v2.iso'],
+    help: '  base64 [-d] <file>   rot13 <file>   sha256sum <file>',
+    files: {
+      '/home/student/message.b64': 'U0N7YmFzZTY0X2lzX25vdF9lbmNyeXB0aW9ufQ==\n',
+      '/home/student/note.txt': 'Zrrg zr ng gur freire ebbz. FP{pnrfne_jnf_urer}\n',
+      '/home/student/checksums.txt': 'Official SHA-256 hashes (from the developer\'s website)\n\n9f2c4e81a7d03b56e1f8c2a94d7b0e3f5a6c1d8e2b4f7a903c5e6d1b8a2f4c70  toolkit-v1.iso\n3b7e9a1c5d2f8046b9e3a7c1d5f2084b6e9a3c7d1f5b2e8a4c6d9f1b3e7a5c20  toolkit-v2.iso\n',
+      '/home/student/toolkit-v1.iso': '(binary data)',
+      '/home/student/toolkit-v2.iso': '(binary data)'
+    },
+    sha: {
+      '/home/student/toolkit-v1.iso': '9f2c4e81a7d03b56e1f8c2a94d7b0e3f5a6c1d8e2b4f7a903c5e6d1b8a2f4c70',
+      '/home/student/toolkit-v2.iso': 'c41d7f0e9b2a6c85d3e1f7a4b0c9d2e6f8a1b5c3d7e0f4a2b6c8d1e5f9a3b740'
+    }
+  },
+  dirscan: {
+    user: 'student', host: 'attackbox', home: '/home/student', ip: '10.10.1.5', title: 'AttackBox · target 10.10.30.2',
+    cheats: ['ping 10.10.30.2', 'gobuster dir -u http://10.10.30.2 -w common.txt', 'curl http://10.10.30.2/backup/'],
+    help: '  ping <ip>   gobuster dir -u <url> -w common.txt   curl <url>',
+    files: { '/home/student/common.txt': 'admin\nbackup\ncss\nimages\nlogin\nold\ntest\nuploads\n', '/home/student/target.txt': 'Target: 10.10.30.2 (this host only)\n' }
+  }
+};
+
+const NMAP = {
+  plain: 'Starting Nmap 7.94 ( https://nmap.org )\nNmap scan report for 10.10.14.7\nHost is up (0.021s latency).\nNot shown: 997 closed tcp ports (reset)\nPORT   STATE SERVICE\n21/tcp open  ftp\n22/tcp open  ssh\n80/tcp open  http\n\nNmap done: 1 IP address (1 host up) scanned in 1.42 seconds',
+  sv: 'Starting Nmap 7.94 ( https://nmap.org )\nNmap scan report for 10.10.14.7\nHost is up (0.020s latency).\nNot shown: 997 closed tcp ports (reset)\nPORT   STATE SERVICE VERSION\n21/tcp open  ftp     vsftpd 3.0.3\n22/tcp open  ssh     OpenSSH 8.2p1 Ubuntu 4ubuntu0.5 (Ubuntu Linux; protocol 2.0)\n80/tcp open  http    Apache httpd 2.4.41 ((Ubuntu))\nService Info: OSs: Unix, Linux\n\nService detection performed.\nNmap done: 1 IP address (1 host up) scanned in 8.73 seconds'
+};
+const WEB = {
+  '/': '<!doctype html>\n<html><head><title>Northwind Tutoring</title></head>\n<body>\n  <h1>Northwind Tutoring</h1>\n  <p>Site under construction. Check back soon!</p>\n  <!-- TODO: remove dev pages before launch -->\n</body></html>',
+  '/robots.txt': 'User-agent: *\nDisallow: /dev-notes',
+  '/dev-notes': '<h2>Developer notes</h2>\n<p>Remember to delete this page before launch.</p>\n<p>SC{robots_tell_secrets}</p>'
+};
+const WEB2 = {
+  '/': '<html><body><h1>Brightside School Portal</h1><a href="/login">Staff login</a></body></html>',
+  '/login': '<html><body><form method="post"><input name="user"><input name="pass" type="password"></form></body></html>',
+  '/admin': '<html><body><h1>403 Forbidden</h1></body></html>',
+  '/images': '<html><body><h1>301 Moved Permanently</h1></body></html>',
+  '/backup': 'Index of /backup\n\n  config.php.bak      2026-03-02 14:10   1.1K\n  site-old.zip        2026-03-02 14:09   48M',
+  '/backup/config.php.bak': '<?php\n// old config - delete me\n$db_user = "portal";\n$db_pass = "Spring2026";\n// SC{backups_are_not_hidden}\n?>',
+  '/backup/site-old.zip': '(binary zip data)'
+};
+const GOBUSTER = '===============================================================\nGobuster v3.6\n===============================================================\n[+] Url:        http://10.10.30.2\n[+] Wordlist:   common.txt\n===============================================================\n/admin                (Status: 403) [Size: 277]\n/backup               (Status: 200) [Size: 412]\n/images               (Status: 301) [Size: 311]\n/login                (Status: 200) [Size: 1630]\n===============================================================\nFinished';
+const TARGETS = {
+  recon: { ip: '10.10.14.7', web: WEB, nmap: NMAP },
+  dirscan: { ip: '10.10.30.2', web: WEB2, nmap: { plain: 'Nmap scan report for 10.10.30.2\nHost is up.\nPORT   STATE SERVICE\n80/tcp open  http', sv: 'Nmap scan report for 10.10.30.2\nHost is up.\nPORT   STATE SERVICE VERSION\n80/tcp open  http    nginx 1.18.0' } }
+};
+
+function mountTerminal(kind) {
+  const L = { ...LABS[kind], modes: LABS[kind].modes ? JSON.parse(JSON.stringify(LABS[kind].modes)) : null };
+  let cwd = L.home;
+  const hist = []; let hIdx = 0;
+  const lab = document.getElementById('lab');
+  lab.innerHTML = `<div class="lab-frame"><div class="lab-bar"><span class="dot"></span><span>${esc(L.title)}</span><span class="ip">${L.ip}</span></div>
+    <div class="term" id="term"><div id="out"></div><div class="term-in"><span class="p" id="prompt"></span><input id="cmd" aria-label="Terminal command" autocomplete="off" autocapitalize="off" spellcheck="false"></div></div></div>
+    <div class="cheats" aria-label="Example commands">${L.cheats.map(c => `<button data-c="${esc(c)}">${esc(c)}</button>`).join('')}</div>
+    <div class="lab-note">Simulated machine. Click a command above to type it, or use ↑ / ↓ for history.</div>`;
+  const out = document.getElementById('out'), inp = document.getElementById('cmd'), term = document.getElementById('term'), promptEl = document.getElementById('prompt');
+  const shortPath = p => p === L.home ? '~' : p.startsWith(L.home + '/') ? '~' + p.slice(L.home.length) : p;
+  const setPrompt = () => { promptEl.textContent = `${L.user}@${L.host}:${shortPath(cwd)}$`; };
+  const print = (html) => { const d = document.createElement('div'); d.innerHTML = html; out.appendChild(d); term.scrollTop = term.scrollHeight; };
+  setPrompt();
+  print(`<span class="d">Connected to ${L.host} (${L.ip}). Type </span><span class="h">help</span><span class="d"> to list commands.</span>`);
+  term.addEventListener('click', e => { if (!window.getSelection().toString()) inp.focus(); });
+  lab.querySelectorAll('.cheats button').forEach(b => b.onclick = () => { inp.value = b.dataset.c; inp.focus(); });
+
+  const resolve = p => {
+    if (!p || p === '~') return L.home;
+    if (p.startsWith('~/')) p = L.home + p.slice(1);
+    const parts = (p.startsWith('/') ? p : cwd + '/' + p).split('/');
+    const stack = [];
+    for (const s of parts) { if (!s || s === '.') continue; if (s === '..') stack.pop(); else stack.push(s); }
+    return '/' + stack.join('/');
+  };
+  const isFile = p => Object.prototype.hasOwnProperty.call(L.files, p);
+  const canRead = p => { const md = L.modes && L.modes[p]; if (!md) return true; return md.o === L.user ? md.m[1] === 'r' : md.m[7] === 'r'; };
+  const isDir = p => p === '/' || Object.keys(L.files).some(f => f.startsWith(p + '/'));
+  const children = p => { const pre = p === '/' ? '/' : p + '/'; const set = new Map();
+    Object.keys(L.files).forEach(f => { if (f.startsWith(pre)) { const rest = f.slice(pre.length); const name = rest.split('/')[0]; set.set(name, rest.includes('/')); } });
+    return [...set.entries()].sort((a, b) => a[0].localeCompare(b[0])); };
+  const tokenize = s => (s.match(/"[^"]*"|'[^']*'|\S+/g) || []).map(t => t.replace(/^(["'])(.*)\1$/, '$2'));
+
+  function run(args, stdin) {
+    const [cmd, ...rest] = args;
+    const flags = rest.filter(a => /^-/.test(a)), pos = rest.filter(a => !/^-/.test(a));
+    const readArg = () => { if (pos.length) { const p = resolve(pos[pos.length - 1]); if (isFile(p) && !canRead(p)) return { err: `${cmd}: ${pos[pos.length - 1]}: Permission denied` }; if (isFile(p)) return { text: L.files[p] }; return { err: `${cmd}: ${pos[pos.length - 1]}: ${isDir(p) ? 'Is a directory' : 'No such file or directory'}` }; } return { text: stdin || '' }; };
+    switch (cmd) {
+      case 'help': return { text: 'Commands you can use in this lab:\n  whoami  pwd  ls [-a] [dir]  cd <dir>  cat <file>  echo <text>\n  grep [-c] [-i] [-v] <pattern> [file]   wc -l   head [-n N]   tail [-n N]\n  sort   uniq [-c]   hostname   id   clear   history\n' + (kind === 'recon' ? '  ping <ip>   nmap [-sV] <ip>   curl <url>\n' : '') + (L.help ? L.help + '\n' : '') + (L.modes ? '  ls -l   chmod +x <file>   ./<file>\n' : '') + 'Chain commands with a pipe, for example:  grep Failed file | wc -l' };
+      case 'whoami': return { text: L.user };
+      case 'hostname': return { text: L.host };
+      case 'id': return { text: `uid=1000(${L.user}) gid=1000(${L.user}) groups=1000(${L.user})` };
+      case 'pwd': return { text: cwd };
+      case 'echo': return { text: rest.join(' ') };
+      case 'history': return { text: hist.map((h, i) => `  ${String(i + 1).padStart(3)}  ${h}`).join('\n') };
+      case 'ls': {
+        const target = resolve(pos[0] || cwd);
+        if (isFile(target)) return { text: pos[0] };
+        if (!isDir(target)) return { err: `ls: cannot access '${pos[0]}': No such file or directory` };
+        const all = flags.some(f => f.includes('a'));
+        let items = children(target).filter(([n]) => all || !n.startsWith('.'));
+        if (flags.some(f => f.includes('l'))) {
+          const pre = target === '/' ? '/' : target + '/';
+          const lines = items.map(([n, dir]) => {
+            const md = dir ? { m: 'drwxr-xr-x', o: L.user, g: L.user } : (L.modes && L.modes[pre + n]) || { m: '-rw-r--r--', o: L.user, g: L.user };
+            const size = dir ? 4096 : (L.files[pre + n] || '').length;
+            const name = dir ? `<span style="color:var(--term-prompt)">${esc(n)}/</span>` : md.m[3] === 'x' ? `<span style="color:#45C982">${esc(n)}</span>` : esc(n);
+            return `${md.m} 1 ${md.o.padEnd(8)} ${md.g.padEnd(8)} ${String(size).padStart(5)} Nov 25 09:00 ${name}`;
+          });
+          return { html: `total ${items.length * 4}\n` + lines.join('\n') };
+        }
+        const names = items.map(([n, dir]) => dir ? `<span style="color:var(--term-prompt)">${esc(n)}/</span>` : esc(n));
+        if (all) names.unshift('<span style="color:var(--term-prompt)">./</span>', '<span style="color:var(--term-prompt)">../</span>');
+        return { html: names.join('  ') };
+      }
+      case 'cd': {
+        const target = resolve(pos[0] || '~');
+        if (isFile(target)) return { err: `cd: ${pos[0]}: Not a directory` };
+        if (!isDir(target)) return { err: `cd: ${pos[0]}: No such file or directory` };
+        cwd = target; setPrompt(); return { text: '' };
+      }
+      case 'cat': { if (!pos.length && stdin != null) return { text: stdin }; if (!pos.length) return { err: 'cat: missing file name' }; return readArg(); }
+      case 'grep': {
+        if (!pos.length) return { err: 'usage: grep [-c] [-i] [-v] <pattern> [file]' };
+        const pat = pos[0]; const src = pos.length > 1 ? (() => { const p = resolve(pos[1]); return isFile(p) ? { text: L.files[p] } : { err: `grep: ${pos[1]}: No such file or directory` }; })() : { text: stdin || '' };
+        if (src.err) return src;
+        const ci = flags.some(f => f.includes('i')), inv = flags.some(f => f.includes('v'));
+        const lines = src.text.split('\n').filter(Boolean).filter(l => (ci ? l.toLowerCase().includes(pat.toLowerCase()) : l.includes(pat)) !== inv);
+        if (flags.some(f => f.includes('c'))) return { text: String(lines.length) };
+        return { text: lines.join('\n') };
+      }
+      case 'wc': { const r = readArg(); if (r.err) return r; const n = r.text.split('\n').filter(Boolean).length; return { text: flags.includes('-l') || !flags.length ? String(n) : String(n) }; }
+      case 'head': case 'tail': { const ni = rest.indexOf('-n'); const n = ni >= 0 ? parseInt(rest[ni + 1], 10) || 10 : 10; const fileArgs = pos.filter(p => String(parseInt(p, 10)) !== p); const r = fileArgs.length ? (isFile(resolve(fileArgs[0])) ? { text: L.files[resolve(fileArgs[0])] } : { err: `${cmd}: cannot open '${fileArgs[0]}'` }) : { text: stdin || '' }; if (r.err) return r; const ls = r.text.split('\n').filter(Boolean); return { text: (cmd === 'head' ? ls.slice(0, n) : ls.slice(-n)).join('\n') }; }
+      case 'sort': { const r = readArg(); if (r.err) return r; return { text: r.text.split('\n').filter(Boolean).sort().join('\n') }; }
+      case 'uniq': { const r = readArg(); if (r.err) return r; const ls = r.text.split('\n').filter(Boolean); const res = []; ls.forEach(l => { const last = res[res.length - 1]; if (last && last.l === l) last.c++; else res.push({ l, c: 1 }); }); return { text: res.map(x => flags.includes('-c') ? `${String(x.c).padStart(7)} ${x.l}` : x.l).join('\n') }; }
+      case 'ping': {
+        const T = TARGETS[kind];
+        if (!T) return { err: 'ping: network is disabled in this lab' };
+        if (!pos[0]) return { err: 'usage: ping <ip>' };
+        if (pos[0] !== T.ip) return { err: `Out of scope: ${pos[0]} is not your target. This lab only allows ${T.ip}.` };
+        return { text: `PING ${T.ip} (${T.ip}) 56(84) bytes of data.\n` + [0.84, 0.79, 0.91, 0.82].map((t, i) => `64 bytes from ${T.ip}: icmp_seq=${i + 1} ttl=64 time=${(20 + t).toFixed(2)} ms`).join('\n') + `\n\n--- ${T.ip} ping statistics ---\n4 packets transmitted, 4 received, 0% packet loss` };
+      }
+      case 'nmap': {
+        const T = TARGETS[kind];
+        if (!T) return { err: 'nmap: command not found' };
+        if (!pos[0]) return { err: 'usage: nmap [-sV] <ip>' };
+        if (pos[0] !== T.ip) return { err: `Out of scope: ${pos[0]} is not your target. Only scan systems you have permission to test.` };
+        return { text: flags.some(f => f === '-sV' || f === '-A') ? T.nmap.sv : T.nmap.plain, slow: true };
+      }
+      case 'curl': {
+        const T = TARGETS[kind];
+        if (!T) return { err: 'curl: network is disabled in this lab' };
+        if (!pos[0]) return { err: 'usage: curl <url>' };
+        const m = pos[0].match(/^(?:https?:\/\/)?([^\/]+)(\/.*)?$/);
+        if (!m || m[1] !== T.ip) return { err: `Out of scope: only http://${T.ip} is reachable from this lab.` };
+        const path = (m[2] || '/').replace(/\/$/, '') || '/';
+        return { text: T.web[path] || '<html><body><h1>404 Not Found</h1></body></html>' };
+      }
+      case 'gobuster': {
+        if (kind !== 'dirscan') return { err: 'gobuster: command not found' };
+        const ui = rest.indexOf('-u'), url = ui >= 0 ? rest[ui + 1] : '';
+        if (rest[0] !== 'dir' || !url) return { err: 'usage: gobuster dir -u <url> -w <wordlist>' };
+        if (!/^(https?:\/\/)?10\.10\.30\.2\/?$/.test(url)) return { err: `Out of scope: only http://10.10.30.2 is your target.` };
+        return { text: GOBUSTER, slow: true };
+      }
+      case 'base64': case 'rot13': case 'sha256sum': {
+        if (kind !== 'crypto') return { err: `${cmd}: command not found` };
+        if (cmd === 'sha256sum') { if (!pos[0]) return { err: 'usage: sha256sum <file>' }; const p = resolve(pos[0]); if (!isFile(p)) return { err: `sha256sum: ${pos[0]}: No such file or directory` }; return { text: `${(L.sha && L.sha[p]) || 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'}  ${pos[0]}` }; }
+        const r = readArg(); if (r.err) return r;
+        const t = r.text.trim();
+        if (cmd === 'rot13') return { text: t.replace(/[a-z]/gi, ch => { const b = ch <= 'Z' ? 65 : 97; return String.fromCharCode((ch.charCodeAt(0) - b + 13) % 26 + b); }) };
+        try { return { text: flags.includes('-d') ? atob(t) : btoa(t) }; } catch (e) { return { err: 'base64: invalid input' }; }
+      }
+      case 'chmod': {
+        if (!L.modes) return { err: 'chmod: this lab is read-only' };
+        if (pos.length < 2 && !(rest.length >= 2)) return { err: 'usage: chmod +x <file>   or   chmod 755 <file>' };
+        const mode = rest[0], file = rest[1], p = resolve(file || '');
+        if (!isFile(p)) return { err: `chmod: cannot access '${file}': No such file or directory` };
+        const cur = L.modes[p] || { m: '-rw-r--r--', o: L.user, g: L.user };
+        if (cur.o !== L.user) return { err: `chmod: changing permissions of '${file}': Operation not permitted` };
+        let bits = cur.m.slice(1).split('');
+        if (/^[0-7]{3}$/.test(mode)) bits = mode.split('').flatMap(d => { d = +d; return [d & 4 ? 'r' : '-', d & 2 ? 'w' : '-', d & 1 ? 'x' : '-']; });
+        else if (/^[ugoa]*[+-][rwx]+$/.test(mode)) { const add = mode.includes('+'); const [who, perms] = mode.split(/[+-]/); const idx = { u: [0], g: [1], o: [2], a: [0, 1, 2] }; const groups = who ? [...new Set(who.split('').flatMap(w => idx[w]))] : [0, 1, 2]; groups.forEach(g => perms.split('').forEach(c => { const off = g * 3 + 'rwx'.indexOf(c); bits[off] = add ? c : '-'; })); }
+        else return { err: `chmod: invalid mode: '${mode}'` };
+        L.modes[p] = { ...cur, m: '-' + bits.join('') }; return { text: '' };
+      }
+      case 'sudo': return { err: `${L.user} is not in the sudoers file. This incident will be reported.` };
+      case 'rm': return { err: 'rm: this lab is read-only' };
+      case 'ssh': case 'ftp': return { err: `${cmd}: connections are disabled in this lab` };
+      default: {
+        if (cmd.startsWith('./') || cmd.startsWith('/')) {
+          const p = resolve(cmd);
+          if (!isFile(p)) return { err: `bash: ${cmd}: No such file or directory` };
+          const md = L.modes && L.modes[p];
+          const own = !md || md.o === L.user;
+          const canExec = md && (own ? md.m[3] === 'x' : md.m[9] === 'x');
+          if (!canExec) return { err: `bash: ${cmd}: Permission denied` };
+          return { text: (L.run && L.run[p]) || '' };
+        }
+        return { err: `${cmd}: command not found. Type help to see available commands.` };
+      }
+    }
+  }
+
+  function exec(line) {
+    print(`<span class="p">${esc(promptEl.textContent)}</span> ${esc(line)}`);
+    if (!line.trim()) return;
+    hist.push(line); hIdx = hist.length;
+    if (line.trim() === 'clear') { out.innerHTML = ''; return; }
+    const stages = line.split('|').map(s => tokenize(s.trim())).filter(s => s.length);
+    let data = null, res;
+    for (const st of stages) { res = run(st, data); if (res.err) break; data = res.text != null ? res.text : ''; }
+    const show = () => { if (res.err) print(`<span class="e">${esc(res.err)}</span>`); else if (res.html) print(res.html); else if (res.text) print(esc(res.text)); };
+    if (res.slow) { inp.disabled = true; print('<span class="d">Scanning...</span>'); setTimeout(() => { out.lastChild.remove(); show(); inp.disabled = false; inp.focus(); }, 900); }
+    else show();
+  }
+
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { const v = inp.value; inp.value = ''; exec(v); }
+    else if (e.key === 'ArrowUp') { if (hIdx > 0) { hIdx--; inp.value = hist[hIdx]; } e.preventDefault(); }
+    else if (e.key === 'ArrowDown') { if (hIdx < hist.length - 1) { hIdx++; inp.value = hist[hIdx]; } else { hIdx = hist.length; inp.value = ''; } e.preventDefault(); }
+    else if (e.key === 'l' && e.ctrlKey) { out.innerHTML = ''; e.preventDefault(); }
+  });
+}
+
+/* ============================== WEB LAB (SQLi simulation) ============================== */
+function mountWebLab() {
+  const lab = document.getElementById('lab');
+  lab.innerHTML = `<div class="webapp"><div class="browser-bar"><span>←</span><span class="url">http://10.10.22.9/login</span></div>
+    <div class="webapp-body"><div class="eyebrow">Practice app · Northwind Staff Portal</div><h3>Staff sign in</h3>
+      <label for="wu">Username<input id="wu" autocomplete="off" spellcheck="false"></label>
+      <label for="wp">Password<input id="wp" autocomplete="off" spellcheck="false"></label>
+      <button class="btn" id="wgo">Sign in</button>
+      <div><div class="eyebrow" style="margin-bottom:6px">Query the server will run</div><div class="sqlbox" id="sql"></div></div>
+      <div class="result" id="wres" hidden></div></div></div>
+    <div class="lab-note">This app is a simulation that runs in your browser. No real database or server is involved.</div>`;
+  const u = document.getElementById('wu'), p = document.getElementById('wp'), sql = document.getElementById('sql'), res = document.getElementById('wres');
+  const USERS = [{ username: 'admin', password: 'X9!long-random-pass' }, { username: 'priya', password: 'Tut0r!2026' }];
+
+  function render() {
+    // Build the query as plain-text segments, then style user input and anything after a SQL comment.
+    const segs = [];
+    const addInput = v => { const i = v.indexOf("'"); if (i < 0) segs.push({ t: v }); else { segs.push({ t: v.slice(0, i) }); segs.push({ t: v.slice(i), inj: true }); } };
+    segs.push({ t: "SELECT * FROM users\nWHERE username = '" }); addInput(u.value);
+    segs.push({ t: "' AND password = '" }); addInput(p.value); segs.push({ t: "'" });
+    const full = segs.map(s => s.t).join('');
+    const cut = full.search(/--|#/);
+    let pos = 0, html = '';
+    segs.forEach(s => {
+      for (const ch of s.t) {
+        const cls = [s.inj ? 'inj' : '', cut >= 0 && pos >= cut ? 'cm' : ''].filter(Boolean).join(' ');
+        html += cls ? `<span class="${cls}">${esc(ch)}</span>` : esc(ch);
+        pos++;
+      }
+    });
+    sql.innerHTML = html;
+  }
+
+  // Very small evaluator that mimics how the vulnerable query behaves.
+  function evaluate(user, pass) {
+    let where = `username = '${user}' AND password = '${pass}'`;
+    const cm = where.search(/--|#/); if (cm >= 0) where = where.slice(0, cm);
+    const quotes = (where.match(/'/g) || []).length;
+    if (quotes % 2 !== 0) return { error: "SQL syntax error near '" + where.slice(-20) + "'" };
+    const orTrue = /\bor\b\s*('?)(\w+)\1\s*=\s*\1\2\1/i.test(where);
+    if (orTrue) return { row: USERS[0] };
+    const m = where.match(/^username = '(.*?)'(?:\s+AND\s+password = '(.*?)')?\s*$/i);
+    if (!m) return { row: null };
+    const found = USERS.find(x => x.username === m[1] && (m[2] === undefined || x.password === m[2]));
+    return { row: found || null };
+  }
+
+  function go() {
+    const r = evaluate(u.value, p.value);
+    res.hidden = false;
+    if (r.error) { res.className = 'result no'; res.textContent = 'Server error 500: ' + r.error + '. A crash like this tells an attacker the input reaches the database.'; }
+    else if (r.row && r.row.username === 'admin') { res.className = 'result ok'; res.innerHTML = `Signed in as <strong>admin</strong>. Welcome to the staff dashboard.<br>Flag: <code>SC{never_trust_user_input}</code>`; }
+    else if (r.row) { res.className = 'result ok'; res.innerHTML = `Signed in as <strong>${esc(r.row.username)}</strong>.`; }
+    else { res.className = 'result no'; res.textContent = 'Invalid username or password.'; }
+  }
+  u.addEventListener('input', render); p.addEventListener('input', render);
+  [u, p].forEach(el => el.addEventListener('keydown', e => { if (e.key === 'Enter') go(); }));
+  document.getElementById('wgo').onclick = go;
+  render();
+}
+
+/* ============================== WEB LAB (XSS simulation) ============================== */
+function mountXssLab() {
+  const lab = document.getElementById('lab');
+  lab.innerHTML = `<div class="webapp"><div class="browser-bar"><span>←</span><span class="url" id="xurl">http://10.10.40.3/search</span></div>
+    <div class="webapp-body"><div class="eyebrow">Practice app · Brightside Library</div><h3>Search the catalogue</h3>
+      <div class="q-row"><input id="xq" aria-label="Search" autocomplete="off" spellcheck="false" placeholder="Search books"><button class="btn small" id="xgo">Search</button></div>
+      <label style="flex-direction:row;align-items:center;gap:8px;color:var(--ink)"><input type="checkbox" id="xsafe"> Safe mode (encode output)</label>
+      <div><div class="eyebrow" style="margin-bottom:6px">HTML the server sends back</div><div class="sqlbox" id="xsrc"></div></div>
+      <div><div class="eyebrow" style="margin-bottom:6px">What the browser shows</div><div class="result no" id="xout" style="color:var(--ink)">Search for something to see results.</div></div>
+      <div class="result ok" id="xalert" hidden></div></div></div>
+    <div class="lab-note">This app is a simulation. Your input is never actually run as code.</div>`;
+  const q = document.getElementById('xq'), safe = document.getElementById('xsafe');
+  const src = document.getElementById('xsrc'), out = document.getElementById('xout'), al = document.getElementById('xalert');
+  const enc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  function go() {
+    const v = q.value;
+    document.getElementById('xurl').textContent = 'http://10.10.40.3/search?q=' + encodeURIComponent(v);
+    const echoed = safe.checked ? enc(v) : v;
+    src.textContent = `<p>You searched for: ${echoed}</p>\n<p>0 books found.</p>`;
+    const scripty = /<script[\s>]|<\w+[^>]*\son\w+\s*=|javascript:/i.test(v);
+    // Show formatting tags as formatting (unsafe mode only), everything else as text. Nothing is executed.
+    let shown = esc(v);
+    if (!safe.checked) shown = shown.replace(/&lt;(\/?)(b|i|u|em|strong)&gt;/gi, '<$1$2>').replace(/&lt;script[\s\S]*?&lt;\/script&gt;/gi, '');
+    out.innerHTML = `You searched for: ${shown}<br>0 books found.`;
+    if (scripty && !safe.checked) { al.hidden = false; al.innerHTML = `The page ran your script. In a real browser a pop-up would appear here.<br>Flag: <code>SC{reflected_xss_found}</code>`; }
+    else if (scripty) { al.hidden = false; al.className = 'result ok'; al.innerHTML = 'Safe mode encoded your input, so the browser showed it as plain text. No script ran.'; }
+    else al.hidden = true;
+  }
+  document.getElementById('xgo').onclick = go;
+  q.addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+  safe.addEventListener('change', () => { if (q.value) go(); });
+}
+
+/* ============================== ROUTER ============================== */
+function route() {
+  const h = location.hash.slice(1) || 'home';
+  document.querySelectorAll('nav.main a').forEach(a => a.classList.toggle('on', a.dataset.nav === h || (h.startsWith('room-') && a.dataset.nav === 'paths')));
+  if (h.startsWith('room-')) viewRoom(h.slice(5));
+  else if (h === 'paths') viewPaths();
+  else if (h === 'leaderboard') viewLeaderboard();
+  else viewHome();
+  renderStats();
+  window.scrollTo(0, 0);
+}
+window.addEventListener('hashchange', route);
+route();
+</script>
+
+</body>
+</html>
